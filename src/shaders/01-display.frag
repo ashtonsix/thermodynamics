@@ -1,3 +1,4 @@
+
 #version 300 es
 
 precision highp float;
@@ -14,4 +15,10 @@ void main() {
     max(-col.x, 0.) + max(col.y, 0.),
     1.0
   );
+  // fragColor = vec4(
+  //   abs(col.x * 0.4) + abs(col.y * 0.4),
+  //   abs(col.x * 1.0) + abs(col.y * 1.0),
+  //   abs(col.x * 3.) + abs(col.y * 3.),
+  //   1.0
+  // );
 }
