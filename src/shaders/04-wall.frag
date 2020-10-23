@@ -10,8 +10,6 @@ layout(std140) uniform SceneUniforms {
   float uHeight;
 };
 
-float centripetal_factor = .0;
-
 // int circle_size = 16;
 // float circle[32] = float[](0., 3., 1., 3., 2., 2., 3., 1., 3., 0., 3., -1., 2., -2., 1., -3., 0., -3., -1., -3., -2., -2., -3., -1., -3., 0., -3., 1., -2., 2., -1., 3.);
 
@@ -34,81 +32,45 @@ layout(location=0) out vec4 fragColor1;
 layout(location=1) out vec4 fragColor2;
 void main() {
   float mag = 0.;
-  float xd = 0.;
-  float yd = 0.;
+  float count = 0.;
 
-  vec4 c = texture(texture1, vUV);
-  if (c.w != 0.) {
-    fragColor1 = vec4(c.x, c.y, 0., c.w);
-    fragColor2 = vec4(0., 0., 0., 0.);
-    return;
-  }
-
+  vec4 c = texture(
+    texture1,
+    vec2(
+      vUV.x,
+      vUV.y
+    )
+  );
   for (int i = 0; i < circle_size; i++) {
     float cx = circle[i * 2];
     float cy = circle[i * 2 + 1];
-    vec4 c = texture(
+    float w = texture(
       texture1,
       vec2(
         vUV.x + cx / uWidth,
         vUV.y + cy / uHeight
       )
-    );
-    if (c.z != 0.) {
-      float xd_ = -c.z * (cx / (abs(cx) + abs(cy)));
-      float yd_ = -c.z * (cy / (abs(cx) + abs(cy)));
-      xd += xd_;
-      yd += yd_;
-      mag += (abs(xd_) + abs(yd_)) * (1. - centripetal_factor);
+    ).w;
+    if (w == 0.) {
+      continue;
     }
-    {
-      int j = (xy2i(c.x, c.y) + circle_size / 2) % circle_size;
+    count += 1.;
+    int j = xy2i(c.x, c.y);
 
-      int diff = min(min(abs(i - j), abs((i + circle_size) - j)), abs(i - (j + circle_size)));
-      int max_diff = 12;
+    int diff = min(min(abs(i - j), abs((i + circle_size) - j)), abs(i - (j + circle_size)));
+    int max_diff = 12;
 
-      if (diff <= max_diff) {
-        float p = (abs(c.x) + abs(c.y)) / float(min(max_diff * 2 + 1, circle_size));
-        float xd_ = -p * (cx / (abs(cx) + abs(cy))) * (1. - centripetal_factor);
-        float yd_ = -p * (cy / (abs(cx) + abs(cy))) * (1. - centripetal_factor);
-        xd += xd_;
-        yd += yd_;
-        mag += abs(xd_) + abs(yd_);
-      }
-    }
-    {
-      int j = xy2i(c.x, c.y);
-
-      // diff = somewhere between 0-8 inclusive
-      int diff = min(min(abs(i - j), abs((i + circle_size) - j)), abs(i - (j + circle_size)));
-      // more energy -> smaller max_diff, >=1 -> 0, ~0 -> 8
-      int max_diff = 3;
-      
-      if (diff <= max_diff) {
-        float p = (abs(c.x) + abs(c.y)) / float(min(max_diff * 2 + 1, circle_size));
-        float xd_ = -p * (cx / (abs(cx) + abs(cy))) * centripetal_factor;
-        float yd_ = -p * (cy / (abs(cx) + abs(cy))) * centripetal_factor;
-        xd += xd_;
-        yd += yd_;
-        mag += abs(xd_) + abs(yd_);
-      }
+    if (diff <= max_diff) {
+      mag += (abs(c.x) + abs(c.y)) / float(min(max_diff * 2 + 1, circle_size));
     }
   }
-  
-  xd = (c.x + xd) * .5;
-  yd = (c.y + yd) * .5;
-  mag = (mag + abs(c.x) + abs(c.y)) * .5;
 
-  if (xd == 0.) xd += 0.0000001;
-  if (yd == 0.) yd += 0.0000001;
-
-  float mult = mag / (abs(xd) + abs(yd));
-  mult = isnan(mult) || isinf(mult) ? 1. : mult;
-
+  float wEnergy = mag / (float(circle_size) - count);
+  if (isinf(wEnergy) || isnan(wEnergy)) wEnergy = 0.;
   fragColor1 = vec4(
-    xd * mult,
-    yd * mult,
-    0.,
+    c.x,
+    c.y,
+    wEnergy,
     c.w
   );
   fragColor2 = vec4(0., 0., 0., 0.);
