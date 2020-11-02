@@ -64,46 +64,57 @@ float mag(in vec4 e) {
 layout(location=0) out vec4 fragColor1;
 layout(location=1) out vec4 fragColor2;
 void main() {
-  float centripetalMag = 0.;
-  float wallMag = 0.;
-  float wallCount = 0.;
+  float vmag = 0.;
+  vec2 vxy = vec2(0., 0.);
 
-  vec4 c = texture(
-    texture1,
-    vec2(
-      vUV.x,
-      vUV.y
-    )
-  );
+  vec4 c = texture(texture1, vUV);
   if (c.w == -1.) {
     fragColor1 = vec4(0., 0., 0., c.w);
     fragColor2 = vec4(0., 0., 0., 0.);
     return;
   }
+
   for (int i = 0; i < 9; i++) {
     if (i == 4) continue;
-    float cx = mod(float(i), 3.) - 1.;
-    float cy = floor(float(i) / 3.) - 1.;
+    vec2 ixy = vec2(mod(float(i), 3.) - 1., floor(float(i) / 3.) - 1.);
     vec4 cc = texture(
       texture1,
       vec2(
-        vUV.x + cx / uWidth,
-        vUV.y + cy / uHeight
+        vUV.x + ixy.x / uWidth,
+        vUV.y + ixy.y / uHeight
       )
     );
-    
-    if (cc.w == -1.) {
-      vec2 e = getDisplace(c.xy, i, PI - centripetalAngle);
-      wallMag += mag(e);
-      wallCount += 1.;
-    } else {
-      vec2 e = getDisplace(cc.xy, i, centripetalAngle);
-      centripetalMag += mag(e);
-    }
-  }
+    // adjusted centripetal factor
+    float acf = min(cc.z / mag(cc) * centripetalFactor, min(centripetalFactor, 1.));
+    acf = isnan(acf) || isinf(acf) ? 0. : acf;
 
-  float wEnergy = wallMag / (8. - wallCount);
-  if (isinf(wEnergy) || isnan(wEnergy)) wEnergy = 0.;
-  fragColor1 = vec4(c.x, c.y, centripetalMag, wEnergy);
+    if (cc.w > 0.) {
+      vec2 e = ixy * -(cc.w / mag(ixy)) * (1. - acf);
+      vxy += e;
+      vmag += (abs(e.x) + abs(e.y));
+    }
+
+    int j = (int(-ixy.y) + 1) * 3 + int(-ixy.x) + 1;
+    vec2 e1 = getDisplace(cc.xy, j, PI - centripetalAngle) * (1. - acf);
+    float me2 = mag(getDisplace(c.xy, j, centripetalAngle) * (mag(cc) / cc.z) * acf);
+    me2 = isnan(me2) || isinf(me2) ? 0. : me2;
+
+    vxy += e1;
+    vmag += mag(e1) + me2;
+  }
+  
+  vxy = (c.xy + vxy) * .5;
+  vmag = (vmag + mag(c)) * .5;
+
+  if (mag(vxy) == 0.) vxy += 0.000001;
+
+  float mult = vmag / mag(vxy);
+  mult = isnan(mult) || isinf(mult) ? 1. : mult;
+
+  fragColor1 = vec4(
+    vxy * mult,
+    0.,
+    0.
+  );
   fragColor2 = vec4(0., 0., 0., 0.);
 }

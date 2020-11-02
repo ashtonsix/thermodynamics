@@ -1,18 +1,49 @@
 import 'react'
-const {floor, abs, min} = Math
 const mod = (v, m) => ((v % m) + m) % m
 
-// prettier-ignore
-const circle = [
-  0., 6., 1., 6., 2., 6., 3., 5., 4., 5., 5., 4., 5., 3., 6., 2., 6., 1., 6., 0., 6., -1., 6., -2., 5., -3., 5., -4., 4., -5., 3., -5., 2., -6., 1., -6., 0., -6., -1., -6., -2., -6., -3., -5., -4., -5., -5., -4., -5., -3., -6., -2., -6., -1., -6., 0., -6., 1., -6., 2., -5., 3., -5., 4., -4., 5., -3., 5., -2., 6., -1., 6.
+const {sin, cos, atan2, min, max, floor, abs, PI} = Math
+
+const loBounds = [
+  3.534291735288517, // PI*9/8
+  4.319689898685965, // PI*11/8
+  5.105088062083414, // PI*13/8
+  2.748893571891069, // PI*7/8
+  0,
+  5.890486225480862, // PI*15/8
+  1.963495408493621, // PI*5/8
+  1.178097245096172, // PI*3/8
+  0.392699081698724, // PI*1/8
 ]
 
-const xy2i = (x, y) => {
-  let r = abs(x) / abs(y)
-  r = !isFinite(r) ? 0 : r >= 1 ? 1 / r : r
-  // prettier-ignore
-  return r < 0.25 ? r < 0.08333333333333333 ? x >= 0. ? y >= 0. ? abs(y) >= abs(x) ? 0 : 9 : abs(y) >= abs(x) ? 18 : 9 : y >= 0. ? abs(y) >= abs(x) ? 0 : 27 : abs(y) >= abs(x) ? 18 : 27 : x >= 0. ? y >= 0. ? abs(y) >= abs(x) ? 1 : 8 : abs(y) >= abs(x) ? 17 : 10 : y >= 0. ? abs(y) >= abs(x) ? 35 : 28 : abs(y) >= abs(x) ? 19 : 26 : r < 0.4666666666666667 ? x >= 0. ? y >= 0. ? abs(y) >= abs(x) ? 2 : 7 : abs(y) >= abs(x) ? 36 : 11 : y >= 0. ? abs(y) >= abs(x) ? 34 : 29 : abs(y) >= abs(x) ? 20 : 25 : r < 0.7 ? x >= 0. ? y >= 0. ? abs(y) >= abs(x) ? 3 : 6 : abs(y) >= abs(x) ? 15 : 12 : y >= 0. ? abs(y) >= abs(x) ? 33 : 30 : abs(y) >= abs(x) ? 21 : 24 : x >= 0. ? y >= 0. ? abs(y) >= abs(x) ? 4 : 5 : abs(y) >= abs(x) ? 14 : 13 : y >= 0. ? abs(y) >= abs(x) ? 32 : 31 : abs(y) >= abs(x) ? 22 : 23;
+const getDisplace = (e, i, arcFull) => {
+  let loBound = loBounds[i]
+  let hiBound = loBound + PI * (2 / 8)
+  let bisector = atan2(e.y, e.x)
+
+  let loUnbounded = (bisector - arcFull + PI * 2) % (PI * 2)
+  let hiUnbounded = (bisector + arcFull + PI * 2) % (PI * 2)
+  if (loUnbounded > hiUnbounded) hiUnbounded += PI * 2
+  if (hiBound < loUnbounded) {
+    loUnbounded -= PI * 2
+    hiUnbounded -= PI * 2
+  } else if (loBound > hiUnbounded) {
+    loUnbounded += PI * 2
+    hiUnbounded += PI * 2
+  }
+  let lo = max(min(loUnbounded, hiBound), loBound)
+  let hi = max(min(hiUnbounded, hiBound), loBound)
+  let theta = (lo + hi) / 2
+  let arc = hi - lo
+  if (theta >= PI) theta -= PI * 2
+
+  let scalar =
+    ((abs(e.x) + abs(e.y)) * (arc / (arcFull * 2))) /
+    (abs(cos(theta)) + abs(sin(theta)))
+
+  return {x: cos(theta) * scalar, y: sin(theta) * scalar}
 }
+
+const centripetalFactor = 0.5
 
 const doItOnce = (state) => {
   const nextState = Array(state.length)
@@ -26,29 +57,46 @@ const doItOnce = (state) => {
   for (let iy = 0; iy < state.length; iy++) {
     for (let ix = 0; ix < state[iy].length; ix++) {
       let mag = 0
+      for (let i = 0; i < 9; i++) {
+        if (i === 4) continue
+        const cx = mod(i, 3) - 1
+        const cy = floor(i / 3) - 1
+        const cc =
+          state[mod(iy + cy, state.length)][mod(ix + cx, state[0].length)]
+
+        const e = getDisplace(cc, i, PI * 0.25)
+        mag += abs(e.x) + abs(e.y)
+      }
+      state[iy][ix].z = mag
+    }
+  }
+
+  for (let iy = 0; iy < state.length; iy++) {
+    for (let ix = 0; ix < state[iy].length; ix++) {
+      let mag = 0
       let xd = 0
       let yd = 0
-      for (let i = 0; i < 36; i++) {
-        const cx = circle[i * 2]
-        const cy = circle[i * 2 + 1]
-        const c =
+      const c = state[iy][ix]
+      for (let i = 0; i < 9; i++) {
+        if (i === 4) continue
+        const cx = mod(i, 3) - 1
+        const cy = floor(i / 3) - 1
+        const cc =
           state[mod(iy + cy, state.length)][mod(ix + cx, state[0].length)]
-        const j = xy2i(c.x, c.y)
 
-        const diff = min(abs(i - j), abs(i + 36 - j), abs(i - (j + 36)))
-        const max_diff = floor((1 - min(abs(c.x) + abs(c.y), 1)) * 19)
+        let j = (-cy + 1) * 3 + -cx + 1
+        const e1 = getDisplace(cc, j, PI * 0.25)
+        const e2 = getDisplace(c, j, PI * 0.25)
 
-        if (diff <= max_diff) {
-          const p = (abs(c.x) + abs(c.y)) / min(max_diff * 2 + 1, 36)
-          const xd_ = -(p * cx) / (abs(cx) + abs(cy))
-          const yd_ = -(p * cy) / (abs(cx) + abs(cy))
-          xd += xd_
-          yd += yd_
-          mag += abs(xd_) + abs(yd_)
-        }
+        xd += e1.x * (1 - centripetalFactor)
+        yd += e1.y * (1 - centripetalFactor)
+        mag +=
+          (abs(e1.x) + abs(e1.y)) * (1 - centripetalFactor) +
+          (abs(e2.x) + abs(e2.y)) *
+            ((abs(cc.x) + abs(cc.y)) / cc.z) *
+            centripetalFactor
       }
 
-      const c = state[iy][ix]
       xd = (c.x + xd) * 0.5
       yd = (c.y + yd) * 0.5
       mag = (mag + abs(c.x) + abs(c.y)) * 0.5
@@ -77,20 +125,18 @@ const getTotal = (grid) => {
 }
 
 export default function test() {
-  let grid = Array(30)
+  let grid = Array(20)
     .fill(undefined)
     .map(() =>
-      Array(30)
+      Array(20)
         .fill(undefined)
-        .map(() => ({x: Math.random() * 2 - 1, y: Math.random() * 2 - 1}))
+        .map(() => ({x: 0.01, y: 0}))
     )
 
-  grid[10][10] = {x: 1.7, y: 0}
+  grid[10][1] = {x: 10, y: 0}
 
-  console.log('total', getTotal(grid))
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 50; i++) {
     grid = doItOnce(grid)
-    console.log('total', getTotal(grid))
   }
 
   return grid

@@ -10,7 +10,7 @@ layout(std140) uniform SceneUniforms {
   float uHeight;
 };
 
-float centripetal_factor = .0;
+float centripetal_factor = 1.;
 
 // int circle_size = 16;
 // float circle[32] = float[](0., 3., 1., 3., 2., 2., 3., 1., 3., 0., 3., -1., 2., -2., 1., -3., 0., -3., -1., -3., -2., -2., -3., -1., -3., 0., -3., 1., -2., 2., -1., 3.);
@@ -79,9 +79,7 @@ void main() {
     {
       int j = xy2i(c.x, c.y);
 
-      // diff = somewhere between 0-8 inclusive
       int diff = min(min(abs(i - j), abs((i + circle_size) - j)), abs(i - (j + circle_size)));
-      // more energy -> smaller max_diff, >=1 -> 0, ~0 -> 8
       int max_diff = 3;
       
       if (diff <= max_diff) {

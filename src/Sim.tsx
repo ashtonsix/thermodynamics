@@ -2,8 +2,6 @@ import PicoGL from 'picogl'
 import vertexShader from './shaders/00-vertex.vert'
 import fragShader from './shaders/01-display.frag'
 
-const MAGNIFY = 3
-
 export default class Simulation {
   options = null
   canvas = null
@@ -31,9 +29,12 @@ export default class Simulation {
     }
 
     const uniformBuffer = pico
-      .createUniformBuffer([PicoGL.FLOAT, PicoGL.FLOAT])
+      .createUniformBuffer(new Array(5).fill(PicoGL.FLOAT))
       .set(0, options.width)
       .set(1, options.height)
+      .set(2, options.centripetalFactor)
+      .set(3, options.centripetalAngle)
+      .set(4, options.smallArc)
       .update()
 
     const drawCall = pico
@@ -75,8 +76,8 @@ export default class Simulation {
   constructor(options) {
     this.options = options
     const canvas = document.createElement('canvas')
-    canvas.style.height = options.width * MAGNIFY + 'px'
-    canvas.style.width = options.height * MAGNIFY + 'px'
+    canvas.style.height = options.width * options.magnification + 'px'
+    canvas.style.width = options.height * options.magnification + 'px'
     canvas.style.imageRendering = 'pixelated'
     canvas.setAttribute('height', options.width + 'px')
     canvas.setAttribute('width', options.height + 'px')

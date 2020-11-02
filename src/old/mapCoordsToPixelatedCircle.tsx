@@ -76,11 +76,3 @@ export default function createCoordsToPixelatedCircleMapper(circleEighth) {
     `}`
   )
 }
-
-console.log(
-  createCoordsToPixelatedCircleMapper([
-    [0, 3],
-    [1, 3],
-    [2, 2],
-  ])
-)
