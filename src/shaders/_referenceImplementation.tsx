@@ -1,7 +1,7 @@
 import 'react'
 const mod = (v, m) => ((v % m) + m) % m
 
-const {sin, cos, atan2, min, max, floor, abs, PI} = Math
+const {sin, cos, atan2, min, max, floor, round, abs, PI} = Math
 
 const loBounds = [
   3.534291735288517, // PI*9/8
@@ -146,4 +146,73 @@ export default function test() {
         .join(' ')
     )
     .join('\n')
+}
+
+const getNextBound = (value) => {
+  let [ix, iy, it, radius] = value
+  let ox = 0
+  let oy = 0
+  let ot = 7
+  if (it < PI && abs(ix - 0.5) < radius) {
+    let x = ix - 0.5
+    let y = (radius ** 2 - x ** 2) ** 0.5
+    let t = atan2(y, x)
+    if (t < 0) t += 2 * PI
+    if (t < ot) {
+      ox = ix - 1
+      oy = iy
+      ot = t
+    }
+  }
+  if ((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) {
+    let y = iy + 0.5
+    let x = (radius ** 2 - y ** 2) ** 0.5
+    let t = atan2(y, x)
+    if (t < 0) t += 2 * PI
+    if (t < ot) {
+      ox = ix
+      oy = iy + 1
+      ot = t
+    }
+  }
+  if (it >= PI && abs(ix + 0.5) < radius) {
+    let x = ix + 0.5
+    let y = -((radius ** 2 - x ** 2) ** 0.5)
+    let t = atan2(y, x)
+    if (t < 0) t += 2 * PI
+    if (t < ot) {
+      ox = ix + 1
+      oy = iy
+      ot = t
+    }
+  }
+  if (it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) {
+    let y = iy - 0.5
+    let x = -((radius ** 2 - y ** 2) ** 0.5)
+    let t = atan2(y, x)
+    if (t < 0) t += 2 * PI
+    if (t < ot) {
+      ox = ix
+      oy = iy - 1
+      ot = t
+    }
+  }
+  return [ox, oy, ot, radius]
+}
+
+let transferRadius = 2 ** 0.5 / 2 + 0.00001
+let prevBound
+let nextBound = getNextBound([round(transferRadius), 0, 0, transferRadius])
+while (true) {
+  prevBound = nextBound
+  nextBound = getNextBound(prevBound)
+
+  let loBound = prevBound[2]
+  let hiBound = nextBound[2]
+  if (loBound > hiBound) hiBound += 2 * PI
+  else if (hiBound - loBound < 0.0001) continue
+  console.log(prevBound.slice(0, 2), (hiBound - loBound) / PI)
+  if (hiBound > 2 * PI) {
+    break
+  }
 }

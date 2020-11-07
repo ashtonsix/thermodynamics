@@ -1,6 +1,6 @@
 import PicoGL from 'picogl'
-import vertexShader from './shaders/00-vertex.vert'
-import fragShader from './shaders/01-display.frag'
+import vertexShader from './shaders/quad.vert'
+import fragShader from './shaders/display.frag'
 
 export default class Simulation {
   options = null
@@ -28,13 +28,17 @@ export default class Simulation {
       programs[fragShader] = program
     }
 
+    if (options.transferRadius - 0.5 === Math.floor(options.transferRadius)) {
+      options.transferRadius -= 0.000001
+    }
     const uniformBuffer = pico
-      .createUniformBuffer(new Array(5).fill(PicoGL.FLOAT))
-      .set(0, options.width)
-      .set(1, options.height)
-      .set(2, options.centripetalFactor)
-      .set(3, options.centripetalAngle)
-      .set(4, options.smallArc)
+      .createUniformBuffer(new Array(7).fill(PicoGL.FLOAT))
+      .set(0, options.size)
+      .set(1, options.centripetalFactor)
+      .set(2, options.centripetalAngle)
+      .set(3, options.transferRadius)
+      .set(4, options.transferFractionRegular)
+      .set(5, options.transferFractionAnima)
       .update()
 
     const drawCall = pico
@@ -76,11 +80,11 @@ export default class Simulation {
   constructor(options) {
     this.options = options
     const canvas = document.createElement('canvas')
-    canvas.style.height = options.width * options.magnification + 'px'
-    canvas.style.width = options.height * options.magnification + 'px'
+    canvas.style.width = options.size * options.magnification + 'px'
+    canvas.style.height = options.size * options.magnification + 'px'
     canvas.style.imageRendering = 'pixelated'
-    canvas.setAttribute('height', options.width + 'px')
-    canvas.setAttribute('width', options.height + 'px')
+    canvas.setAttribute('width', options.size + 'px')
+    canvas.setAttribute('height', options.size + 'px')
     const pico = PicoGL.createApp(canvas).clearColor(1.0, 1.0, 1.0, 1.0)
 
     // prettier-ignore
@@ -94,8 +98,8 @@ export default class Simulation {
       .vertexAttributeBuffer(0, quadVertexBuffer)
 
     const textureParams = [
-      options.width,
-      options.height,
+      options.size,
+      options.size,
       {internalFormat: PicoGL.RGBA32F},
     ]
     const greenTexture1 = pico.createTexture2D(...textureParams)
