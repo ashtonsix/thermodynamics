@@ -6,12 +6,12 @@ import ReactSim from './ReactSim'
 const size = 200
 const magnification = 5
 const frameRate = 300
-const transferFractionRegular = 0
+const transferFractionRegular = 0.01
 const transferFractionAnima = 0.5
 
 const isWall = (x, y, size) => {
   // no wall
-  return false
+  // return false
 
   // square wall
   // const w = 2
@@ -55,7 +55,7 @@ const initialStateGenerator = ({size, wallGenerator, vectorGenerator}) => {
 
 const App = () => {
   const [playing, setPlaying] = useState(false)
-  const [centripetalFactor, setCentripetalFactor] = useState(0)
+  const [centripetalFactor, setCentripetalFactor] = useState(1)
   const [transferRadius, setTransferRadius] = useState(1)
   const [centripetalAngle, setCentripetalAngle] = useState(Math.PI * (1 / 3))
   const [initialState] = useState(() => {

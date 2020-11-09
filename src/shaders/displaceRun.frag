@@ -104,8 +104,6 @@ float mag(in vec4 e) {
   return abs(e.x) + abs(e.y);
 }
 
-float tf = .5;
-
 layout(location=0) out vec4 fragColor1;
 layout(location=1) out vec4 fragColor2;
 void main() {
@@ -120,9 +118,9 @@ void main() {
     fragColor2 = vec4(0., 0., 0., 0.);
     return;
   }
-  // float dfrac = c2.x / mag(c);
-  // dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : min(dfrac, 1.);
-  // float tf = mix(transferFractionRegular, transferFractionAnima, dfrac);
+  float dfrac = c2.x / mag(c);
+  dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : dfrac;
+  float tf = mix(transferFractionRegular, transferFractionAnima, min(dfrac, 1.));
 
   vec4 prevBound = vec4(round(transferRadius), 0., 0., transferRadius);
   vec4 nextBound = getNextBound(prevBound);
@@ -153,22 +151,24 @@ void main() {
         vUV.y + ixy.y / uSize
       )
     );
+    
+    float dfrac = cc2.x / mag(cc);
+    dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : dfrac;
+    float ttf = mix(transferFractionRegular, transferFractionAnima, min(dfrac, 1.));
+
     // adjusted centripetal factor
     float acf = min(cc.z / mag(cc) * centripetalFactor, min(centripetalFactor, 1.));
     acf = isnan(acf) || isinf(acf) ? 0. : acf;
 
-    float dfrac = cc2.x / mag(cc);
-    dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : dfrac;
-
     if (cc.w > 0.) {
-      vec2 e = ixy * -(cc.w / mag(ixy)) * (1. - acf);
+      vec2 e = ixy * -(cc.w / mag(ixy)) * (1. - acf) * ttf;
       vxy += e;
       vmag += (abs(e.x) + abs(e.y));
       dmag += (abs(e.x) + abs(e.y)) * dfrac;
     }
 
-    vec2 e1 = getDisplace(cc.xy, loBound, hiBound, PI - centripetalAngle) * (1. - acf);
-    float me2 = mag(getDisplace(c.xy, loBound, hiBound, centripetalAngle) * (mag(cc) / cc.z) * acf);
+    vec2 e1 = getDisplace(cc.xy, loBound, hiBound, PI - centripetalAngle) * (1. - acf) * ttf;
+    float me2 = mag(getDisplace(c.xy, loBound, hiBound, centripetalAngle) * (mag(cc) / cc.z) * acf) * ttf;
     me2 = isnan(me2) || isinf(me2) ? 0. : me2;
 
     vxy += e1;
@@ -180,14 +180,16 @@ void main() {
     }
   }
   
-  vxy = c.xy * (1. - tf) + vxy * tf;
-  vmag = mag(c) * (1. - tf) + vmag * tf;
-  dmag = c2.x * (1. - tf) + dmag * tf;
+  vxy = c.xy * (1. - tf) + vxy;
+  vmag = mag(c) * (1. - tf) + vmag;
+  dmag = c2.x * (1. - tf) + dmag;
 
   if (mag(vxy) == 0.) vxy += 0.000001;
 
   float mult = vmag / mag(vxy);
   mult = isnan(mult) || isinf(mult) ? 1. : mult;
+
+  float animaReturn = min(dmag, c2.y);
 
   fragColor1 = vec4(
     vxy * mult,
@@ -195,9 +197,9 @@ void main() {
     0.
   );
   fragColor2 = vec4(
-    dmag,
-    0.,
-    0.,
+    dmag - animaReturn,
+    c2.y - animaReturn,
+    animaReturn,
     0.
   );
 }

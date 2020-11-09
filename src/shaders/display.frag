@@ -45,10 +45,8 @@ void main() {
   }
 
   vec4 c2 = texture(texture2, vUV);
-  float x = c.x;
-  float y = c.y;
 
-  float intensity = 1. - 1. / pow(2., abs(x) + abs(y));
+  float intensity = 1. - 1. / pow(2., mag(c));
 
   // fragColor = vec4(
   //   hsl2rgb(vec3(
@@ -58,21 +56,23 @@ void main() {
   //   )),
   //   1.
   // );
-  // fragColor = vec4(
-  //   hsl2rgb(
-  //     mix(
-  //       vec3(1.6, 1., 0.),
-  //       vec3(.8, 1., 1.),
-  //       intensity
-  //     )
-  //   ),
-  //   1.
-  // );
+  fragColor = vec4(
+    hsl2rgb(
+      mix(
+        vec3(1.6, 1., 0.),
+        vec3(.8, 1., 1.),
+        intensity
+      )
+    ),
+    1.
+  );
+  float dfrac = c2.x / mag(c);
+  dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : min(dfrac, 1.);
   fragColor = vec4(
     hsl2rgb(
       vec3(
         .6,
-        c2.x,
+        dfrac,
         intensity * .7
       )
     ),

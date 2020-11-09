@@ -120,10 +120,6 @@ void main() {
     fragColor2 = vec4(0., 0., 0., 0.);
     return;
   }
-  vec4 c2 = texture(
-    texture2,
-    vUV
-  );
 
   vec4 prevBound = vec4(round(transferRadius), 0., 0., transferRadius);
   vec4 nextBound = getNextBound(prevBound);
@@ -153,13 +149,6 @@ void main() {
       vec2 e = getDisplace(c.xy, loBound, hiBound, PI - centripetalAngle);
       wallMag += mag(e);
     } else {
-      vec4 cc2 = texture(
-        texture2,
-        vec2(
-          vUV.x + cx / uSize,
-          vUV.y + cy / uSize
-        )
-      );
       vec2 e = getDisplace(cc.xy, loBound, hiBound, centripetalAngle);
       centripetalMag += mag(e);
       notWallCount += 1.;
