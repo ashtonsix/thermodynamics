@@ -7,11 +7,14 @@ uniform sampler2D texture1;
 uniform sampler2D texture2;
 layout(std140) uniform SceneUniforms {
   float uSize;
-  float centripetalFactor;
-  float centripetalAngle;
+  float centripetalFactorX;
+  float centripetalFactorY;
+  float transferAngleRegular;
+  float transferAngleCentripetal;
   float transferRadius;
   float transferFractionRegular;
   float transferFractionAnima;
+  float displayMode;
 };
 
 float PI = 3.141592653589793;
@@ -97,6 +100,13 @@ vec2 getDisplace(in vec2 e, in float loBound, in float hiBound, in float arcFull
   return vec2(cos(theta), sin(theta)) * scalar;
 }
 
+int getAnimaType(in float magnitude, in float anima) {
+  if (anima == 0.) return 0; // none
+  if (anima < 0.) return 1; // source
+  if (anima / magnitude < .99) return 2; // destination
+  return 3; // transit
+}
+
 float mag(in vec2 e) {
   return abs(e.x) + abs(e.y);
 }
@@ -107,7 +117,7 @@ float mag(in vec4 e) {
 layout(location=0) out vec4 fragColor1;
 layout(location=1) out vec4 fragColor2;
 void main() {
-  float dmag = 0.;
+  float amag = 0.;
   float vmag = 0.;
   vec2 vxy = vec2(0., 0.);
 
@@ -118,13 +128,10 @@ void main() {
     fragColor2 = vec4(0., 0., 0., 0.);
     return;
   }
-  float dfrac = c2.x / mag(c);
-  dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : dfrac;
-  float tf = mix(transferFractionRegular, transferFractionAnima, min(dfrac, 1.));
 
   vec4 prevBound = vec4(round(transferRadius), 0., 0., transferRadius);
   vec4 nextBound = getNextBound(prevBound);
-  while (true) {
+  for (int i; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
@@ -152,54 +159,53 @@ void main() {
       )
     );
     
-    float dfrac = cc2.x / mag(cc);
-    dfrac = isnan(dfrac) || isinf(dfrac) ? 0. : dfrac;
-    float ttf = mix(transferFractionRegular, transferFractionAnima, min(dfrac, 1.));
+    int atype = getAnimaType(mag(cc), cc2.x);
+    float afrac = abs(cc2.x) / mag(cc);
+    afrac = (isnan(afrac) || isinf(afrac)) ? 0. : min(abs(afrac), 1.);
+    float ttf = (atype == 0 || atype == 2) ? transferFractionRegular : transferFractionAnima;
 
-    // adjusted centripetal factor
-    float acf = min(cc.z / mag(cc) * centripetalFactor, min(centripetalFactor, 1.));
-    acf = isnan(acf) || isinf(acf) ? 0. : acf;
+    float cf = min(cc.z / mag(cc) / centripetalFactorX, 1.) * centripetalFactorY;
+    cf = (isnan(cf) || isinf(cf)) ? 0. : cf;
 
     if (cc.w > 0.) {
-      vec2 e = ixy * -(cc.w / mag(ixy)) * (1. - acf) * ttf;
+      vec2 e = ixy * -(cc.w / mag(ixy)) * (1. - cf) * ttf;
       vxy += e;
       vmag += (abs(e.x) + abs(e.y));
-      dmag += (abs(e.x) + abs(e.y)) * dfrac;
+      amag += (abs(e.x) + abs(e.y)) * afrac;
     }
 
-    vec2 e1 = getDisplace(cc.xy, loBound, hiBound, PI - centripetalAngle) * (1. - acf) * ttf;
-    float me2 = mag(getDisplace(c.xy, loBound, hiBound, centripetalAngle) * (mag(cc) / cc.z) * acf) * ttf;
-    me2 = isnan(me2) || isinf(me2) ? 0. : me2;
+    vec2 e1 = getDisplace(cc.xy, loBound, hiBound, transferAngleRegular) * (1. - cf) * ttf;
+    float me2 = mag(getDisplace(c.xy, loBound, hiBound, transferAngleCentripetal) * (mag(cc) / cc.z) * cf) * ttf;
+    me2 = (isnan(me2) || isinf(me2)) ? 0. : me2;
 
     vxy += e1;
     vmag += mag(e1) + me2;
-    dmag += (mag(e1) + me2) * dfrac;
+    amag += (mag(e1) + me2) * afrac;
 
     if (hiBound > 2. * PI) {
       break;
     }
   }
+
+  int atype = getAnimaType(mag(c), c2.x);
+  float tf = (atype == 0 || atype == 2) ? transferFractionRegular : transferFractionAnima;
   
   vxy = c.xy * (1. - tf) + vxy;
   vmag = mag(c) * (1. - tf) + vmag;
-  dmag = c2.x * (1. - tf) + dmag;
+  amag = atype == 1 ? c2.x : (c2.x * (1. - tf) + amag) * .99999;
 
   if (mag(vxy) == 0.) vxy += 0.000001;
 
   float mult = vmag / mag(vxy);
-  mult = isnan(mult) || isinf(mult) ? 1. : mult;
-
-  float animaReturn = min(dmag, c2.y);
+  mult = (isnan(mult) || isinf(mult)) ? 1. : mult;
 
   fragColor1 = vec4(
     vxy * mult,
-    0.,
+    c.z,
     0.
   );
   fragColor2 = vec4(
-    dmag - animaReturn,
-    c2.y - animaReturn,
-    animaReturn,
-    0.
+    amag,
+    c2.yzw
   );
 }

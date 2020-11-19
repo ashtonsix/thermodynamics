@@ -1,0 +1,21 @@
+reduceStream
+return anima to source
+dye behaviour for anima
+TOML
+seperate brightness/contrast for each displayMode
+two display modes side-by-side
+time control - step
+reset simulation
+determinstic random number generator
+continous corrections for total energy
+import/export/save
+social media share/record
+update size/wall without reset
+automatic error/context-loss recovery
+double slit experiment
+better UI controls
+displayMode - energy relative to neighbouring pixels
+add centripetalFactorTheta
+multiple anima sources
+anima source movement
+anima source display as 3x3 square

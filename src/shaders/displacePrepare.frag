@@ -4,14 +4,16 @@ precision highp float;
 
 in vec2 vUV;
 uniform sampler2D texture1;
-uniform sampler2D texture2;
 layout(std140) uniform SceneUniforms {
   float uSize;
-  float centripetalFactor;
-  float centripetalAngle;
+  float centripetalFactorX;
+  float centripetalFactorY;
+  float transferAngleRegular;
+  float transferAngleCentripetal;
   float transferRadius;
   float transferFractionRegular;
   float transferFractionAnima;
+  float displayMode;
 };
 
 float PI = 3.141592653589793;
@@ -105,25 +107,20 @@ float mag(in vec4 e) {
 }
 
 layout(location=0) out vec4 fragColor1;
-layout(location=1) out vec4 fragColor2;
 void main() {
   float centripetalMag = 0.;
   float wallMag = 0.;
   float notWallCount = 0.;
 
-  vec4 c = texture(
-    texture1,
-    vUV
-  );
+  vec4 c = texture(texture1, vUV);
   if (c.w == -1.) {
     fragColor1 = vec4(0., 0., 0., c.w);
-    fragColor2 = vec4(0., 0., 0., 0.);
     return;
   }
 
   vec4 prevBound = vec4(round(transferRadius), 0., 0., transferRadius);
   vec4 nextBound = getNextBound(prevBound);
-  while (true) {
+  for (int i; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
@@ -144,12 +141,12 @@ void main() {
         vUV.y + cy / uSize
       )
     );
-    
+
     if (cc.w == -1.) {
-      vec2 e = getDisplace(c.xy, loBound, hiBound, PI - centripetalAngle);
+      vec2 e = getDisplace(c.xy, loBound, hiBound, transferAngleRegular);
       wallMag += mag(e);
     } else {
-      vec2 e = getDisplace(cc.xy, loBound, hiBound, centripetalAngle);
+      vec2 e = getDisplace(cc.xy, loBound, hiBound, transferAngleCentripetal);
       centripetalMag += mag(e);
       notWallCount += 1.;
     }
@@ -162,8 +159,4 @@ void main() {
   float wEnergy = wallMag / notWallCount;
   if (isinf(wEnergy) || isnan(wEnergy)) wEnergy = 0.;
   fragColor1 = vec4(c.x, c.y, centripetalMag, wEnergy);
-  fragColor2 = texture(
-    texture2,
-    vUV
-  );
 }
