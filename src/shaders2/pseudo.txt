@@ -1,0 +1,107 @@
+## state
+
+{
+  frame: 0,
+  frameRate: 60,
+}
+
+## settings
+
+json (static) or js (parameters = t/frame)
+
+{
+  seed: -1,
+  size: 100,
+  transferRadius: 1,
+  substances: [
+    {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'B', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'C', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'D', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'E', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'F', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'G', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+  ],
+  substanceAttractionMatrix: {
+    00: 1, 01: 1, 02: 1, 03: 1, 04: 1, 05: 1, 06: 1, 07: 1,
+    10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1,
+    20: 1, 21: 1, 22: 1, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1,
+    30: 1, 31: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1, 37: 1,
+    40: 1, 41: 1, 42: 1, 43: 1, 44: 1, 45: 1, 46: 1, 47: 1,
+    50: 1, 51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1,
+    60: 1, 61: 1, 62: 1, 63: 1, 64: 1, 65: 1, 66: 1, 67: 1,
+    70: 1, 71: 1, 72: 1, 73: 1, 74: 1, 75: 1, 76: 1, 77: 1,
+  },
+  reactionParameters: {
+    a: 1.2,
+    b: 1,
+    c: 1,
+    x: .1,
+  }
+  reactions: [
+    "A + B -> 2A, a * x",
+    "B + C -> 2B, b * x",
+    "C + A -> 2C, c * x",
+    // "A -> a(1), 1"
+    // "D -> L, (L - L') * 8 > 2.5 && (L - L') * 8 < 3.5 ? 1 : 0"
+    // "L -> D, (L - L') * 8 < 1.5 && (L - L') * 8 > 3.5 ? 1 : 0"
+  ],
+}
+
+## images
+
+images (binary, png or js):
+inputs: x, y, size
+
+energy 
+angle (0-2PI)
+substance1
+substance2
+substance3
+substance4
+substance5
+substance6
+substance7
+substance8
+addressHue
+addressValue
+
+custom shaders:
+
+stats
+custom
+display
+
+## formulas
+
+image encoding: x/(256.0-x)
+s-shaped display: 0.5/(0.5+pow(2.0,-((x+brightness)*contrast)))
+linear display: (x+brightness)*contrast
+
+## texture packing
+
+xyxy ssss ssss aaaa aaaa
+
+## uniform packing
+
+static uniforms
+[seed, frame, size, transferRadius]
+
+substanceUniforms
+[
+  arc1, arc2, arcWeight1, arcBlending1, arcWeight2, arcBlending2,
+  flow1, flow2, flowWeight1, flowBlending1, flowWeight2, flowBlending2,
+]
+
+substanceAttractionMatrix
+sa11, sa12, sa13, ...
+sa21, sa22, sa23, ...
+...
+
+reactionUniforms
+[r1, r2, r3, r4, ...]
+
+shaders:
+
+prepare

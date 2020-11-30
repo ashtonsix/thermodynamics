@@ -12,6 +12,7 @@ import useInterval from './useInterval'
 const ReactSim = ({initialState, options, playing}) => {
   const ref = useRef(null as any)
   const [sim, setSim] = useState(null as Simulation)
+  ;(window as any).sim = sim
 
   useEffect(() => {
     const sim = new Simulation(options)

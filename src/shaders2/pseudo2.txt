@@ -1,0 +1,49 @@
+## pseudocode
+
+A   ->     B
+how much will i, A, give to B
+
+(length, direction) forEach substance in A
+length forEach substance in B
+
+uniforms, length A -> flow A
+uniforms, length B -> attraction B
+direction A, attraction B -> transferFraction B
+flow A, transferFraction B -> flowWeightedFractionalTransfer
+
+(flowWeightedFractionalTransferSum, direction) forEach substance in A
+
+A   ->     B
+how much will i, B, recieve from A
+
+(flowWeightedFractionalTransferSum, direction) forEach substance in A
+(length, direction) forEach substance in B
+
+
+uniforms, length B -> attraction B
+direction A, attraction B -> transferFraction B
+flowWeightedFractionalTransferSum A, transferFraction B -> flowFraction B
+
+flowFractionSum (flow)
+
+
+## parameters / textures
+
+c1a, c2a, c3a, c4a
+xyxy
+
+s1a = c1a.xy
+s2a = c1a.zw
+s3a = c2a.xy
+s4a = c2a.zw
+s5a = c3a.xy
+s6a = c3a.zw
+s7a = c4a.xy
+s8a = c4a.zw
+
+l1a = len(s1a)
+l1b = c1b.x
+
+transferPrepare
+
+substance1x

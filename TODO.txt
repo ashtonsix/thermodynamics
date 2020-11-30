@@ -19,3 +19,8 @@ add centripetalFactorTheta
 multiple anima sources
 anima source movement
 anima source display as 3x3 square
+
+
+
+for js: https://neil.fraser.name/software/JS-Interpreter/docs.html
+for quantum entanglement: https://www.geogebra.org/3d

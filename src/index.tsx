@@ -2,6 +2,9 @@ import './index.css'
 import React, {useEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
 import ReactSim from './ReactSim'
+import main from './shaders2/_referenceImplementation'
+
+main()
 
 const optionPresets = {
   atomic: {
@@ -51,7 +54,7 @@ const optionPresets = {
   },
   default: null,
 }
-optionPresets.default = optionPresets.ring
+optionPresets.default = optionPresets.atomic
 
 const wallGenerator = (x, y, size) => {
   // no wall
@@ -223,11 +226,11 @@ const App = () => {
             }}
           />
         </div>
-        <ReactSim
+        {/* <ReactSim
           initialState={initialState}
           options={options}
           playing={playing}
-        />
+        /> */}
       </div>
     </div>
   )
