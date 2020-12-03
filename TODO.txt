@@ -25,3 +25,16 @@ anima source display as 3x3 square
 for js: https://neil.fraser.name/software/JS-Interpreter/docs.html
 for quantum entanglement: https://www.geogebra.org/3d
 for documentation: https://github.com/benweet/stackedit
+
+
+
+ability to save/load simulations
+intuitive controls for simulation
+statistics
+display modes
+'write' extension
+hexagon-based grid
+multiple display modes at once, displayed side-by-side
+determinstic randomness (reproducibility)
+website, with user accounts and ability to store/share simulations
+ability to embed simulations into video course

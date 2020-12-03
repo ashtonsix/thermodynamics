@@ -325,7 +325,7 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
 
   let prevBound: Vec4 = vec4(round(uTransferRadius), 0, 0, uTransferRadius);
   let nextBound: Vec4 = getNextBound(prevBound);
-  for (let i = 0; i < 999; i++) {
+  for (let i: Int = 0; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
@@ -526,7 +526,7 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
 
   let prevBound: Vec4 = vec4(round(uTransferRadius), 0, 0, uTransferRadius);
   let nextBound: Vec4 = getNextBound(prevBound);
-  for (let i = 0; i < 999; i++) {
+  for (let i: Int = 0; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
@@ -693,7 +693,7 @@ function substanceReactParse(config) {
   if (config.substances.includes((s) => /a[0-7]/.test(s.symbol))) {
     throw new Error('Symbols cannot take the form of a0, a1, a2... they are reserved');
   }
-  if (Array.from(new Set(symbols)).length < config.substances.length + 9) {
+  if (Array.from(new Set(symbols)).length < Math.min(config.substances.length + 9, 16)) {
     throw new Error('Every symbol must be unique');
   }
 
@@ -716,7 +716,7 @@ function substanceReactParse(config) {
           const [, quantity, symbol] = str.match(/(\d*)([A-Za-z]\w*)/);
           return {quantity: +(quantity || '1'), symbol};
         }),
-        weight: weight,
+        weight: weight.trim(),
       };
       if (
         reaction.input.reduce((pv, v) => pv + v.quantity, 0) !== reaction.output.reduce((pv, v) => pv + v.quantity, 0)
@@ -804,7 +804,7 @@ function substanceReactGenerator(config) {
 
     const rWeights = reactions.map((r) => eval(r.weight));
 
-    for (let i = 0; i < 16; i++) {
+    for (let i: Int = 0; i < 16; i++) {
       let i0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
       let i1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
       let i2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
@@ -858,8 +858,8 @@ function substanceReactGenerator(config) {
         break;
       }
     }
-    let final0 = add(input0, output0);
-    let final1 = add(input1, output1);
+    let final0: Vec4 = max(add(input0, output0), 0.0);
+    let final1: Vec4 = max(add(input1, output1), 0.0);
     let s0: Vec2 = mul(normalize(vec2(cs01[0], cs01[1])), final0[0]);
     let s1: Vec2 = mul(normalize(vec2(cs01[2], cs01[3])), final0[1]);
     let s2: Vec2 = mul(normalize(vec2(cs23[0], cs23[1])), final0[2]);
@@ -868,6 +868,7 @@ function substanceReactGenerator(config) {
     let s5: Vec2 = mul(normalize(vec2(cs45[2], cs45[3])), final1[1]);
     let s6: Vec2 = mul(normalize(vec2(cs67[0], cs67[1])), final1[2]);
     let s7: Vec2 = mul(normalize(vec2(cs67[2], cs67[3])), final1[3]);
+    // TODO: if initial address >0 do max(epsilon)
     let a0123: Vec4 = sub(input2, output2);
     let a4567: Vec4 = sub(input3, output3);
 
@@ -955,7 +956,7 @@ function generateTextures(generators, size) {
 // prettier-ignore
 const config = {
   seed: -1,
-  size: 4,
+  size: 1,
   transferRadius: 1,
   substances: [
     {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
@@ -977,11 +978,9 @@ const config = {
     '60': 1, '61': 1, '62': 1, '63': 1, '64': 1, '65': 1, '66': 1, '67': 1,
     '70': 1, '71': 1, '72': 1, '73': 1, '74': 1, '75': 1, '76': 1, '77': 1,
   },
-  reactionParameters: {a: 1.2, b: 1, c: 1, x: .1},
+  reactionParameters: {},
   reactions: [
-    "A + B -> 2A, a * x",
-    "B + C -> 2B, b * x",
-    "C + A -> 2C, c * x",
+    "A -> B, 1.0",
   ],
 }
 
@@ -1044,7 +1043,7 @@ function cycle(sim: Sim) {
     ['s01', 's23', 's45', 's67', 's0123Len', 's4567Len'],
     ['s01FWTFS', 's23FWTFS', 's45FWTFS', 's67FWTFS', 's01Given', 's23Given', 's45Given', 's67Given', 'avgArcAndFlo']
   );
-  console.log(sim.reduce('s0123Len')[0]);
+  console.log(sim.reduce('s0123Len'));
   print(sim.textures['s01']);
   print(sim.textures['s01FWTFS']);
   print(sim.textures['s01Given']);
@@ -1060,6 +1059,12 @@ function cycle(sim: Sim) {
       'avgArcAndFlo'
     ],
     ['s01', 's23', 's45', 's67']
+  );
+  const substanceReact = substanceReactGenerator(config);
+  sim.compute(
+    substanceReact,
+    ['s01', 's23', 's45', 's67', 'a0123', 'a4567'],
+    ['s01', 's23', 's45', 's67', 'a0123', 'a4567']
   );
   // await sim.display([
   //   's01', 's23', 's45', 's67',
@@ -1084,7 +1089,7 @@ export default function main() {
     [
       {
         energy: (x, y, size) => {
-          return x === 1 && y === 1 ? 0 : 1;
+          return 1;
         },
         direction: (x, y, size) => 0,
       },
@@ -1098,11 +1103,9 @@ export default function main() {
     ],
     config.size
   );
-  console.log(uniforms);
 
   Object.assign(sim.textures, textures);
   sim.size = config.size;
   sim.uniforms = uniforms;
-  cycle(sim);
   cycle(sim);
 }
