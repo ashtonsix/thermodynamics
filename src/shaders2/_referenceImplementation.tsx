@@ -1,6 +1,8 @@
 /* eslint-disable no-lone-blocks, no-eval */
 
 type Texture = Vec4[][];
+type Int = number;
+type Float = number;
 type Vec2 = [number, number];
 type Vec4 = [number, number, number, number];
 interface VecScalarOp {
@@ -15,7 +17,7 @@ interface VecScalarOp {
 
 const {PI, sin, cos, atan2: atan, floor, round, abs, pow} = Math;
 const PI2 = PI * 2.0;
-const epsilon = 0.000000001; // float
+const epsilon = 0.000000001;
 const vec2 = (x: number, y: number): Vec2 => [x, y];
 const vec4 = (x: number, y: number, z: number, w: number): Vec4 => [x, y, z, w];
 (window as any).counter = 0;
@@ -91,17 +93,17 @@ function texture(tex: Texture, vUV: Vec2): Vec4 {
 }
 
 function getNextBound(bound: Vec4): Vec4 {
-  let ix = bound[0]; // float
-  let iy = bound[1]; // float
-  let it = bound[2]; // float
-  let radius = bound[3]; // float
-  let ox = 0.0; // float
-  let oy = 0.0; // float
-  let ot = 7.0; // float
+  let ix: Float = bound[0];
+  let iy: Float = bound[1];
+  let it: Float = bound[2];
+  let radius: Float = bound[3];
+  let ox: Float = 0.0;
+  let oy: Float = 0.0;
+  let ot: Float = 7.0;
   if (it < PI && abs(ix - 0.5) < radius) {
-    let x = ix - 0.5; // float
-    let y = pow(pow(radius, 2.0) - pow(x, 2.0), 0.5); // float
-    let t = atan(y, x); // float
+    let x: Float = ix - 0.5;
+    let y: Float = pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
+    let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
     if (t < ot) {
       ox = ix - 1.0;
@@ -110,9 +112,9 @@ function getNextBound(bound: Vec4): Vec4 {
     }
   }
   if ((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) {
-    let y = iy + 0.5; // float
-    let x = pow(pow(radius, 2.0) - pow(y, 2.0), 0.5); // float
-    let t = atan(y, x); // float
+    let y: Float = iy + 0.5;
+    let x: Float = pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
+    let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
@@ -121,9 +123,9 @@ function getNextBound(bound: Vec4): Vec4 {
     }
   }
   if (it >= PI && abs(ix + 0.5) < radius) {
-    let x = ix + 0.5; // float
-    let y = -pow(pow(radius, 2.0) - pow(x, 2.0), 0.5); // float
-    let t = atan(y, x); // float
+    let x: Float = ix + 0.5;
+    let y: Float = -pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
+    let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
     if (t < ot) {
       ox = ix + 1.0;
@@ -132,9 +134,9 @@ function getNextBound(bound: Vec4): Vec4 {
     }
   }
   if (it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) {
-    let y = iy - 0.5; // float
-    let x = -pow(pow(radius, 2.0) - pow(y, 2.0), 0.5); // float
-    let t = atan(y, x); // float
+    let y: Float = iy - 0.5;
+    let x: Float = -pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
+    let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
@@ -146,8 +148,8 @@ function getNextBound(bound: Vec4): Vec4 {
 }
 
 function arcOverlap(loCel: number, hiCel: number, loArc: number, hiArc: number) {
-  let length = 0.0; // float
-  let theta = 0.0; // float
+  let length: Float = 0.0;
+  let theta: Float = 0.0;
   // prettier-ignore
   if ((hiCel - loCel) + (hiArc - loArc) >= PI2) {
     length = ((hiCel - loCel) + (hiArc - loArc)) - PI2;
@@ -160,8 +162,8 @@ function arcOverlap(loCel: number, hiCel: number, loArc: number, hiArc: number) 
       loCel += PI2;
       hiCel += PI2;
     }
-    let lo = max(min(loArc, hiCel), loCel); // float
-    let hi = max(min(hiArc, hiCel), loCel); // float
+    let lo: Float = max(min(loArc, hiCel), loCel);
+    let hi: Float = max(min(hiArc, hiCel), loCel);
   
     length = (hi - lo) / (hiArc - loArc);
     theta = mod((lo + hi) / 2.0, PI2);
@@ -175,12 +177,12 @@ function copyPaste(vUV: Vec2, uniforms, textures: Texture[]) {
 }
 function compactLength(vUV: Vec2, uniforms, textures: Texture[]) {
   const [substance01Tex, substance23Tex] = textures;
-  let c01 = texture(substance01Tex, vUV); // vec4
-  let c23 = texture(substance23Tex, vUV); // vec4
-  let s0 = vec2(c01[0], c01[1]); // vec2
-  let s1 = vec2(c01[2], c01[3]); // vec2
-  let s2 = vec2(c23[0], c23[1]); // vec2
-  let s3 = vec2(c23[2], c23[3]); // vec2
+  let c01: Vec4 = texture(substance01Tex, vUV);
+  let c23: Vec4 = texture(substance23Tex, vUV);
+  let s0: Vec2 = vec2(c01[0], c01[1]);
+  let s1: Vec2 = vec2(c01[2], c01[3]);
+  let s2: Vec2 = vec2(c23[0], c23[1]);
+  let s3: Vec2 = vec2(c23[2], c23[3]);
 
   return [vec4(len(s0), len(s1), len(s2), len(s3))];
 }
@@ -211,57 +213,58 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     am0x4567, am1x4567, am2x4567, am3x4567,
     am4x4567, am5x4567, am6x4567, am7x4567,
   ] = uniforms.substanceAttractionMatrix;
-  let c01a = texture(substance01aTex, vUV); // vec4
-  let c23a = texture(substance23aTex, vUV); // vec4
-  let c45a = texture(substance45aTex, vUV); // vec4
-  let c67a = texture(substance67aTex, vUV); // vec4
-  let s0a = vec2(c01a[0], c01a[1]); // vec2
-  let s1a = vec2(c01a[2], c01a[3]); // vec2
-  let s2a = vec2(c23a[0], c23a[1]); // vec2
-  let s3a = vec2(c23a[2], c23a[3]); // vec2
-  let s4a = vec2(c45a[0], c45a[1]); // vec2
-  let s5a = vec2(c45a[2], c45a[3]); // vec2
-  let s6a = vec2(c67a[0], c67a[1]); // vec2
-  let s7a = vec2(c67a[2], c67a[3]); // vec2
-  let s0aLen = len(s0a); // float
-  let s1aLen = len(s1a); // float
-  let s2aLen = len(s2a); // float
-  let s3aLen = len(s3a); // float
-  let s4aLen = len(s4a); // float
-  let s5aLen = len(s5a); // float
-  let s6aLen = len(s6a); // float
-  let s7aLen = len(s7a); // float
-  let s0123aLen = vec4(s0aLen, s1aLen, s2aLen, s3aLen); // vec4
-  let s4567aLen = vec4(s4aLen, s5aLen, s6aLen, s7aLen); // vec4
-  let s0123aX = vec4(s0a[0], s1a[0], s2a[0], s3a[0]); // vec4
-  let s4567aX = vec4(s4a[0], s5a[0], s6a[0], s7a[0]); // vec4
-  let s0123aY = vec4(s0a[1], s1a[1], s2a[1], s3a[1]); // vec4
-  let s4567aY = vec4(s4a[1], s5a[1], s6a[1], s7a[1]); // vec4
+  let c01a: Vec4 = texture(substance01aTex, vUV);
+  let c23a: Vec4 = texture(substance23aTex, vUV);
+  let c45a: Vec4 = texture(substance45aTex, vUV);
+  let c67a: Vec4 = texture(substance67aTex, vUV);
+  let s0a: Vec2 = vec2(c01a[0], c01a[1]);
+  let s1a: Vec2 = vec2(c01a[2], c01a[3]);
+  let s2a: Vec2 = vec2(c23a[0], c23a[1]);
+  let s3a: Vec2 = vec2(c23a[2], c23a[3]);
+  let s4a: Vec2 = vec2(c45a[0], c45a[1]);
+  let s5a: Vec2 = vec2(c45a[2], c45a[3]);
+  let s6a: Vec2 = vec2(c67a[0], c67a[1]);
+  let s7a: Vec2 = vec2(c67a[2], c67a[3]);
+  let s0aLen: Float = len(s0a);
+  let s1aLen: Float = len(s1a);
+  let s2aLen: Float = len(s2a);
+  let s3aLen: Float = len(s3a);
+  let s4aLen: Float = len(s4a);
+  let s5aLen: Float = len(s5a);
+  let s6aLen: Float = len(s6a);
+  let s7aLen: Float = len(s7a);
+  let s0123aLen: Vec4 = vec4(s0aLen, s1aLen, s2aLen, s3aLen);
+  let s4567aLen: Vec4 = vec4(s4aLen, s5aLen, s6aLen, s7aLen);
+  let s0123aX: Vec4 = vec4(s0a[0], s1a[0], s2a[0], s3a[0]);
+  let s4567aX: Vec4 = vec4(s4a[0], s5a[0], s6a[0], s7a[0]);
+  let s0123aY: Vec4 = vec4(s0a[1], s1a[1], s2a[1], s3a[1]);
+  let s4567aY: Vec4 = vec4(s4a[1], s5a[1], s6a[1], s7a[1]);
 
-  let avgArc = divSafe(
-    // float
+  let avgArc: Float = divSafe(
     dot(uArc0123, mul(s0123aLen, uArcWeight0123)) + dot(uArc4567, mul(s4567aLen, uArcWeight4567)),
     dot(s0123aLen, uArcWeight0123) + dot(s4567aLen, uArcWeight4567),
     -1.0
   );
-  let avgFlo = divSafe(
-    // float
+  let avgFlo: Float = divSafe(
     dot(uFlo0123, mul(s0123aLen, uFloWeight0123)) + dot(uFlo4567, mul(s4567aLen, uFloWeight4567)),
     dot(s0123aLen, uFloWeight0123) + dot(s4567aLen, uFloWeight4567),
     -1.0
   );
-  // prettier-ignore
-  let avgDir = normalize( // vec2
+  let avgDir: Vec2 = normalize(
     vec2(
       dot(s0123aX, uDirWeight0123) + dot(s4567aX, uDirWeight4567),
       dot(s0123aY, uDirWeight0123) + dot(s4567aY, uDirWeight4567)
     )
   );
 
-  let s0123aArc = avgArc === -1.0 ? uArc0123 : mix(uArc0123, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending0123); // vec4
-  let s4567aArc = avgArc === -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567); // vec4
-  let s0123aFlo = avgFlo === -1.0 ? uFlo0123 : mix(uFlo0123, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending0123); // vec4
-  let s4567aFlo = avgFlo === -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567); // vec4
+  let s0123aArc: Vec4 =
+    avgArc === -1.0 ? uArc0123 : mix(uArc0123, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending0123);
+  let s4567aArc: Vec4 =
+    avgArc === -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567);
+  let s0123aFlo: Vec4 =
+    avgFlo === -1.0 ? uFlo0123 : mix(uFlo0123, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending0123);
+  let s4567aFlo: Vec4 =
+    avgFlo === -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567);
   s0123aFlo = mul(s0123aFlo, s0123aLen);
   s4567aFlo = mul(s4567aFlo, s4567aLen);
   s0a = mul(normalize(mix(normalize(s0a), avgDir, uDirBlending0123[0])), s0aLen);
@@ -273,12 +276,22 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   s6a = mul(normalize(mix(normalize(s6a), avgDir, uDirBlending4567[2])), s6aLen);
   s7a = mul(normalize(mix(normalize(s7a), avgDir, uDirBlending4567[3])), s7aLen);
 
-  let s0123Bisector = vec4(atan(s0a[1], s0a[0]), atan(s1a[1], s1a[0]), atan(s2a[1], s2a[0]), atan(s3a[1], s3a[0])); // vec4
-  let s4567Bisector = vec4(atan(s4a[1], s4a[0]), atan(s5a[1], s5a[0]), atan(s6a[1], s6a[0]), atan(s7a[1], s7a[0])); // vec4
-  let s0123aLoBound = mod(add(sub(s0123Bisector, s0123aArc), PI2), PI2); // vec4
-  let s4567aLoBound = mod(add(sub(s4567Bisector, s4567aArc), PI2), PI2); // vec4
-  let s0123aHiBound = mod(add(add(s0123Bisector, s0123aArc), PI2), PI2); // vec4
-  let s4567aHiBound = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2); // vec4
+  let s0123Bisector: Vec4 = vec4(
+    atan(s0a[1], s0a[0]),
+    atan(s1a[1], s1a[0]),
+    atan(s2a[1], s2a[0]),
+    atan(s3a[1], s3a[0])
+  );
+  let s4567Bisector: Vec4 = vec4(
+    atan(s4a[1], s4a[0]),
+    atan(s5a[1], s5a[0]),
+    atan(s6a[1], s6a[0]),
+    atan(s7a[1], s7a[0])
+  );
+  let s0123aLoBound: Vec4 = mod(add(sub(s0123Bisector, s0123aArc), PI2), PI2);
+  let s4567aLoBound: Vec4 = mod(add(sub(s4567Bisector, s4567aArc), PI2), PI2);
+  let s0123aHiBound: Vec4 = mod(add(add(s0123Bisector, s0123aArc), PI2), PI2);
+  let s4567aHiBound: Vec4 = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2);
 
   s0123aHiBound = vec4(
     s0123aLoBound[0] > s0123aHiBound[0] ? s0123aHiBound[0] + PI2 : s0123aHiBound[0],
@@ -293,31 +306,31 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     s4567aLoBound[3] > s4567aHiBound[3] ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
   );
 
-  let s0TransferFractionSum = 0.0; // float
-  let s1TransferFractionSum = 0.0; // float
-  let s2TransferFractionSum = 0.0; // float
-  let s3TransferFractionSum = 0.0; // float
-  let s4TransferFractionSum = 0.0; // float
-  let s5TransferFractionSum = 0.0; // float
-  let s6TransferFractionSum = 0.0; // float
-  let s7TransferFractionSum = 0.0; // float
-  let s0GivenDir = vec2(0.0, 0.0); // vec2
-  let s1GivenDir = vec2(0.0, 0.0); // vec2
-  let s2GivenDir = vec2(0.0, 0.0); // vec2
-  let s3GivenDir = vec2(0.0, 0.0); // vec2
-  let s4GivenDir = vec2(0.0, 0.0); // vec2
-  let s5GivenDir = vec2(0.0, 0.0); // vec2
-  let s6GivenDir = vec2(0.0, 0.0); // vec2
-  let s7GivenDir = vec2(0.0, 0.0); // vec2
+  let s0TransferFractionSum: Float = 0.0;
+  let s1TransferFractionSum: Float = 0.0;
+  let s2TransferFractionSum: Float = 0.0;
+  let s3TransferFractionSum: Float = 0.0;
+  let s4TransferFractionSum: Float = 0.0;
+  let s5TransferFractionSum: Float = 0.0;
+  let s6TransferFractionSum: Float = 0.0;
+  let s7TransferFractionSum: Float = 0.0;
+  let s0GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s1GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s2GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s3GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s4GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s5GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s6GivenDir: Vec2 = vec2(0.0, 0.0);
+  let s7GivenDir: Vec2 = vec2(0.0, 0.0);
 
-  let prevBound = vec4(round(uTransferRadius), 0, 0, uTransferRadius); // vec4
-  let nextBound = getNextBound(prevBound); // vec4
+  let prevBound: Vec4 = vec4(round(uTransferRadius), 0, 0, uTransferRadius);
+  let nextBound: Vec4 = getNextBound(prevBound);
   for (let i = 0; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
-    let loBound = prevBound[2]; // float
-    let hiBound = nextBound[2]; // float
+    let loBound: Float = prevBound[2];
+    let hiBound: Float = nextBound[2];
     if (loBound > hiBound) {
       hiBound += PI2;
     }
@@ -325,19 +338,19 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
       continue;
     }
 
-    let vvUV = vec2(vUV[0] + prevBound[0] / uSize, vUV[1] + prevBound[1] / uSize); // vec2
-    let s0123bLen = texture(substance0123bTex, vvUV); // vec4
-    let s4567bLen = texture(substance4567bTex, vvUV); // vec4
+    let vvUV: Vec2 = vec2(vUV[0] + prevBound[0] / uSize, vUV[1] + prevBound[1] / uSize);
+    let s0123bLen: Vec4 = texture(substance0123bTex, vvUV);
+    let s4567bLen: Vec4 = texture(substance4567bTex, vvUV);
 
-    let s0Attraction = dot(s0123bLen, am0x0123) + dot(s4567bLen, am0x4567); // float
-    let s1Attraction = dot(s0123bLen, am1x0123) + dot(s4567bLen, am1x4567); // float
-    let s2Attraction = dot(s0123bLen, am2x0123) + dot(s4567bLen, am2x4567); // float
-    let s3Attraction = dot(s0123bLen, am3x0123) + dot(s4567bLen, am3x4567); // float
-    let s4Attraction = dot(s0123bLen, am4x0123) + dot(s4567bLen, am4x4567); // float
-    let s5Attraction = dot(s0123bLen, am5x0123) + dot(s4567bLen, am5x4567); // float
-    let s6Attraction = dot(s0123bLen, am6x0123) + dot(s4567bLen, am6x4567); // float
-    let s7Attraction = dot(s0123bLen, am7x0123) + dot(s4567bLen, am7x4567); // float
-    let sAttractionSum = // float
+    let s0Attraction: Float = dot(s0123bLen, am0x0123) + dot(s4567bLen, am0x4567);
+    let s1Attraction: Float = dot(s0123bLen, am1x0123) + dot(s4567bLen, am1x4567);
+    let s2Attraction: Float = dot(s0123bLen, am2x0123) + dot(s4567bLen, am2x4567);
+    let s3Attraction: Float = dot(s0123bLen, am3x0123) + dot(s4567bLen, am3x4567);
+    let s4Attraction: Float = dot(s0123bLen, am4x0123) + dot(s4567bLen, am4x4567);
+    let s5Attraction: Float = dot(s0123bLen, am5x0123) + dot(s4567bLen, am5x4567);
+    let s6Attraction: Float = dot(s0123bLen, am6x0123) + dot(s4567bLen, am6x4567);
+    let s7Attraction: Float = dot(s0123bLen, am7x0123) + dot(s4567bLen, am7x4567);
+    let sAttractionSum: Float =
       sum(vec4(s0Attraction, s1Attraction, s2Attraction, s3Attraction)) +
       sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
     s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction / sAttractionSum;
@@ -349,14 +362,14 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction / sAttractionSum;
     s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction / sAttractionSum;
 
-    let s0TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[0], s0123aHiBound[0]), s0Attraction); // vec2
-    let s1TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[1], s0123aHiBound[1]), s1Attraction); // vec2
-    let s2TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[2], s0123aHiBound[2]), s2Attraction); // vec2
-    let s3TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[3], s0123aHiBound[3]), s3Attraction); // vec2
-    let s4TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[0], s4567aHiBound[0]), s4Attraction); // vec2
-    let s5TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[1], s4567aHiBound[1]), s5Attraction); // vec2
-    let s6TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[2], s4567aHiBound[2]), s6Attraction); // vec2
-    let s7TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[3], s4567aHiBound[3]), s7Attraction); // vec2
+    let s0TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[0], s0123aHiBound[0]), s0Attraction);
+    let s1TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[1], s0123aHiBound[1]), s1Attraction);
+    let s2TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[2], s0123aHiBound[2]), s2Attraction);
+    let s3TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[3], s0123aHiBound[3]), s3Attraction);
+    let s4TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[0], s4567aHiBound[0]), s4Attraction);
+    let s5TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[1], s4567aHiBound[1]), s5Attraction);
+    let s6TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[2], s4567aHiBound[2]), s6Attraction);
+    let s7TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[3], s4567aHiBound[3]), s7Attraction);
 
     s0TransferFractionSum += len(s0TransferFraction);
     s1TransferFractionSum += len(s1TransferFraction);
@@ -382,33 +395,33 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   }
 
   // flowWeightedTransferFractionSum
-  let s0FWTFS = mul(normalize(s0a), divSafe(s0TransferFractionSum, s0123aFlo[0], 0.0)); // vec2
-  let s1FWTFS = mul(normalize(s1a), divSafe(s1TransferFractionSum, s0123aFlo[1], 0.0)); // vec2
-  let s2FWTFS = mul(normalize(s2a), divSafe(s2TransferFractionSum, s0123aFlo[2], 0.0)); // vec2
-  let s3FWTFS = mul(normalize(s3a), divSafe(s3TransferFractionSum, s0123aFlo[3], 0.0)); // vec2
-  let s4FWTFS = mul(normalize(s4a), divSafe(s4TransferFractionSum, s4567aFlo[0], 0.0)); // vec2
-  let s5FWTFS = mul(normalize(s5a), divSafe(s5TransferFractionSum, s4567aFlo[1], 0.0)); // vec2
-  let s6FWTFS = mul(normalize(s6a), divSafe(s6TransferFractionSum, s4567aFlo[2], 0.0)); // vec2
-  let s7FWTFS = mul(normalize(s7a), divSafe(s7TransferFractionSum, s4567aFlo[3], 0.0)); // vec2
+  let s0FWTFS: Vec2 = mul(normalize(s0a), divSafe(s0TransferFractionSum, s0123aFlo[0], 0.0));
+  let s1FWTFS: Vec2 = mul(normalize(s1a), divSafe(s1TransferFractionSum, s0123aFlo[1], 0.0));
+  let s2FWTFS: Vec2 = mul(normalize(s2a), divSafe(s2TransferFractionSum, s0123aFlo[2], 0.0));
+  let s3FWTFS: Vec2 = mul(normalize(s3a), divSafe(s3TransferFractionSum, s0123aFlo[3], 0.0));
+  let s4FWTFS: Vec2 = mul(normalize(s4a), divSafe(s4TransferFractionSum, s4567aFlo[0], 0.0));
+  let s5FWTFS: Vec2 = mul(normalize(s5a), divSafe(s5TransferFractionSum, s4567aFlo[1], 0.0));
+  let s6FWTFS: Vec2 = mul(normalize(s6a), divSafe(s6TransferFractionSum, s4567aFlo[2], 0.0));
+  let s7FWTFS: Vec2 = mul(normalize(s7a), divSafe(s7TransferFractionSum, s4567aFlo[3], 0.0));
 
-  let s01FWTFS = vec4(s0FWTFS[0], s0FWTFS[1], s1FWTFS[0], s1FWTFS[1]); // vec4
-  let s23FWTFS = vec4(s2FWTFS[0], s2FWTFS[1], s3FWTFS[0], s3FWTFS[1]); // vec4
-  let s45FWTFS = vec4(s4FWTFS[0], s4FWTFS[1], s5FWTFS[0], s5FWTFS[1]); // vec4
-  let s67FWTFS = vec4(s6FWTFS[0], s6FWTFS[1], s7FWTFS[0], s7FWTFS[1]); // vec4
+  let s01FWTFS: Vec4 = vec4(s0FWTFS[0], s0FWTFS[1], s1FWTFS[0], s1FWTFS[1]);
+  let s23FWTFS: Vec4 = vec4(s2FWTFS[0], s2FWTFS[1], s3FWTFS[0], s3FWTFS[1]);
+  let s45FWTFS: Vec4 = vec4(s4FWTFS[0], s4FWTFS[1], s5FWTFS[0], s5FWTFS[1]);
+  let s67FWTFS: Vec4 = vec4(s6FWTFS[0], s6FWTFS[1], s7FWTFS[0], s7FWTFS[1]);
 
-  let s0Given = mul(normalize(s0GivenDir), s0123aFlo[0]); // vec2
-  let s1Given = mul(normalize(s1GivenDir), s0123aFlo[1]); // vec2
-  let s2Given = mul(normalize(s2GivenDir), s0123aFlo[2]); // vec2
-  let s3Given = mul(normalize(s3GivenDir), s0123aFlo[3]); // vec2
-  let s4Given = mul(normalize(s4GivenDir), s4567aFlo[0]); // vec2
-  let s5Given = mul(normalize(s5GivenDir), s4567aFlo[1]); // vec2
-  let s6Given = mul(normalize(s6GivenDir), s4567aFlo[2]); // vec2
-  let s7Given = mul(normalize(s7GivenDir), s4567aFlo[3]); // vec2
+  let s0Given: Vec2 = mul(normalize(s0GivenDir), s0123aFlo[0]);
+  let s1Given: Vec2 = mul(normalize(s1GivenDir), s0123aFlo[1]);
+  let s2Given: Vec2 = mul(normalize(s2GivenDir), s0123aFlo[2]);
+  let s3Given: Vec2 = mul(normalize(s3GivenDir), s0123aFlo[3]);
+  let s4Given: Vec2 = mul(normalize(s4GivenDir), s4567aFlo[0]);
+  let s5Given: Vec2 = mul(normalize(s5GivenDir), s4567aFlo[1]);
+  let s6Given: Vec2 = mul(normalize(s6GivenDir), s4567aFlo[2]);
+  let s7Given: Vec2 = mul(normalize(s7GivenDir), s4567aFlo[3]);
 
-  let s01Given = vec4(s0Given[0], s0Given[1], s1Given[0], s1Given[1]); // vec4
-  let s23Given = vec4(s2Given[0], s2Given[1], s3Given[0], s3Given[1]); // vec4
-  let s45Given = vec4(s4Given[0], s4Given[1], s5Given[0], s5Given[1]); // vec4
-  let s67Given = vec4(s6Given[0], s6Given[1], s7Given[0], s7Given[1]); // vec4
+  let s01Given: Vec4 = vec4(s0Given[0], s0Given[1], s1Given[0], s1Given[1]);
+  let s23Given: Vec4 = vec4(s2Given[0], s2Given[1], s3Given[0], s3Given[1]);
+  let s45Given: Vec4 = vec4(s4Given[0], s4Given[1], s5Given[0], s5Given[1]);
+  let s67Given: Vec4 = vec4(s6Given[0], s6Given[1], s7Given[0], s7Given[1]);
 
   // prettier-ignore
   return [
@@ -451,38 +464,38 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
     am0x4567, am1x4567, am2x4567, am3x4567,
     am4x4567, am5x4567, am6x4567, am7x4567,
   ] = uniforms.substanceAttractionMatrix;
-  let c01b = texture(substance01bTex, vUV); // vec4
-  let c23b = texture(substance23bTex, vUV); // vec4
-  let c45b = texture(substance45bTex, vUV); // vec4
-  let c67b = texture(substance67bTex, vUV); // vec4
-  let s0b = vec2(c01b[0], c01b[1]); // vec2
-  let s1b = vec2(c01b[2], c01b[3]); // vec2
-  let s2b = vec2(c23b[0], c23b[1]); // vec2
-  let s3b = vec2(c23b[2], c23b[3]); // vec2
-  let s4b = vec2(c45b[0], c45b[1]); // vec2
-  let s5b = vec2(c45b[2], c45b[3]); // vec2
-  let s6b = vec2(c67b[0], c67b[1]); // vec2
-  let s7b = vec2(c67b[2], c67b[3]); // vec2
-  let s0bLen = len(s0b); // vec2
-  let s1bLen = len(s1b); // vec2
-  let s2bLen = len(s2b); // vec2
-  let s3bLen = len(s3b); // vec2
-  let s4bLen = len(s4b); // vec2
-  let s5bLen = len(s5b); // vec2
-  let s6bLen = len(s6b); // vec2
-  let s7bLen = len(s7b); // vec2
-  let s0123bLen = vec4(s0bLen, s1bLen, s2bLen, s3bLen); // vec4
-  let s4567bLen = vec4(s4bLen, s5bLen, s6bLen, s7bLen); // vec4
+  let c01b: Vec4 = texture(substance01bTex, vUV);
+  let c23b: Vec4 = texture(substance23bTex, vUV);
+  let c45b: Vec4 = texture(substance45bTex, vUV);
+  let c67b: Vec4 = texture(substance67bTex, vUV);
+  let s0b: Vec2 = vec2(c01b[0], c01b[1]);
+  let s1b: Vec2 = vec2(c01b[2], c01b[3]);
+  let s2b: Vec2 = vec2(c23b[0], c23b[1]);
+  let s3b: Vec2 = vec2(c23b[2], c23b[3]);
+  let s4b: Vec2 = vec2(c45b[0], c45b[1]);
+  let s5b: Vec2 = vec2(c45b[2], c45b[3]);
+  let s6b: Vec2 = vec2(c67b[0], c67b[1]);
+  let s7b: Vec2 = vec2(c67b[2], c67b[3]);
+  let s0bLen: Float = len(s0b);
+  let s1bLen: Float = len(s1b);
+  let s2bLen: Float = len(s2b);
+  let s3bLen: Float = len(s3b);
+  let s4bLen: Float = len(s4b);
+  let s5bLen: Float = len(s5b);
+  let s6bLen: Float = len(s6b);
+  let s7bLen: Float = len(s7b);
+  let s0123bLen: Vec4 = vec4(s0bLen, s1bLen, s2bLen, s3bLen);
+  let s4567bLen: Vec4 = vec4(s4bLen, s5bLen, s6bLen, s7bLen);
 
-  let s0Attraction = dot(s0123bLen, am0x0123) + dot(s4567bLen, am0x4567); // float
-  let s1Attraction = dot(s0123bLen, am1x0123) + dot(s4567bLen, am1x4567); // float
-  let s2Attraction = dot(s0123bLen, am2x0123) + dot(s4567bLen, am2x4567); // float
-  let s3Attraction = dot(s0123bLen, am3x0123) + dot(s4567bLen, am3x4567); // float
-  let s4Attraction = dot(s0123bLen, am4x0123) + dot(s4567bLen, am4x4567); // float
-  let s5Attraction = dot(s0123bLen, am5x0123) + dot(s4567bLen, am5x4567); // float
-  let s6Attraction = dot(s0123bLen, am6x0123) + dot(s4567bLen, am6x4567); // float
-  let s7Attraction = dot(s0123bLen, am7x0123) + dot(s4567bLen, am7x4567); // float
-  let sAttractionSum = // float
+  let s0Attraction: Float = dot(s0123bLen, am0x0123) + dot(s4567bLen, am0x4567);
+  let s1Attraction: Float = dot(s0123bLen, am1x0123) + dot(s4567bLen, am1x4567);
+  let s2Attraction: Float = dot(s0123bLen, am2x0123) + dot(s4567bLen, am2x4567);
+  let s3Attraction: Float = dot(s0123bLen, am3x0123) + dot(s4567bLen, am3x4567);
+  let s4Attraction: Float = dot(s0123bLen, am4x0123) + dot(s4567bLen, am4x4567);
+  let s5Attraction: Float = dot(s0123bLen, am5x0123) + dot(s4567bLen, am5x4567);
+  let s6Attraction: Float = dot(s0123bLen, am6x0123) + dot(s4567bLen, am6x4567);
+  let s7Attraction: Float = dot(s0123bLen, am7x0123) + dot(s4567bLen, am7x4567);
+  let sAttractionSum: Float =
     sum(vec4(s0Attraction, s1Attraction, s2Attraction, s3Attraction)) +
     sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
   s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction / sAttractionSum;
@@ -494,31 +507,31 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction / sAttractionSum;
   s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction / sAttractionSum;
 
-  let s0FloLen = 0.0; // float
-  let s1FloLen = 0.0; // float
-  let s2FloLen = 0.0; // float
-  let s3FloLen = 0.0; // float
-  let s4FloLen = 0.0; // float
-  let s5FloLen = 0.0; // float
-  let s6FloLen = 0.0; // float
-  let s7FloLen = 0.0; // float
-  let s0FloDir = vec2(0.0, 0.0); // vec2
-  let s1FloDir = vec2(0.0, 0.0); // vec2
-  let s2FloDir = vec2(0.0, 0.0); // vec2
-  let s3FloDir = vec2(0.0, 0.0); // vec2
-  let s4FloDir = vec2(0.0, 0.0); // vec2
-  let s5FloDir = vec2(0.0, 0.0); // vec2
-  let s6FloDir = vec2(0.0, 0.0); // vec2
-  let s7FloDir = vec2(0.0, 0.0); // vec2
+  let s0FloLen: Float = 0.0;
+  let s1FloLen: Float = 0.0;
+  let s2FloLen: Float = 0.0;
+  let s3FloLen: Float = 0.0;
+  let s4FloLen: Float = 0.0;
+  let s5FloLen: Float = 0.0;
+  let s6FloLen: Float = 0.0;
+  let s7FloLen: Float = 0.0;
+  let s0FloDir: Vec2 = vec2(0.0, 0.0);
+  let s1FloDir: Vec2 = vec2(0.0, 0.0);
+  let s2FloDir: Vec2 = vec2(0.0, 0.0);
+  let s3FloDir: Vec2 = vec2(0.0, 0.0);
+  let s4FloDir: Vec2 = vec2(0.0, 0.0);
+  let s5FloDir: Vec2 = vec2(0.0, 0.0);
+  let s6FloDir: Vec2 = vec2(0.0, 0.0);
+  let s7FloDir: Vec2 = vec2(0.0, 0.0);
 
-  let prevBound = vec4(round(uTransferRadius), 0, 0, uTransferRadius); // vec4
-  let nextBound = getNextBound(prevBound); // vec4
+  let prevBound: Vec4 = vec4(round(uTransferRadius), 0, 0, uTransferRadius);
+  let nextBound: Vec4 = getNextBound(prevBound);
   for (let i = 0; i < 999; i++) {
     prevBound = nextBound;
     nextBound = getNextBound(prevBound);
 
-    let loBound = prevBound[2]; // vec4
-    let hiBound = nextBound[2]; // vec4
+    let loBound: Float = prevBound[2];
+    let hiBound: Float = nextBound[2];
     if (loBound > hiBound) {
       hiBound += PI2;
     }
@@ -526,38 +539,42 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
       continue;
     }
 
-    let vvUV = vec2(vUV[0] - prevBound[0] / uSize, vUV[1] - prevBound[1] / uSize); // vec2
-    let c01a = texture(substance01aTex, vvUV); // vec4
-    let c23a = texture(substance23aTex, vvUV); // vec4
-    let c45a = texture(substance45aTex, vvUV); // vec4
-    let c67a = texture(substance67aTex, vvUV); // vec4
-    let s0aFWTFS = vec2(c01a[0], c01a[1]); // vec2
-    let s1aFWTFS = vec2(c01a[2], c01a[3]); // vec2
-    let s2aFWTFS = vec2(c23a[0], c23a[1]); // vec2
-    let s3aFWTFS = vec2(c23a[2], c23a[3]); // vec2
-    let s4aFWTFS = vec2(c45a[0], c45a[1]); // vec2
-    let s5aFWTFS = vec2(c45a[2], c45a[3]); // vec2
-    let s6aFWTFS = vec2(c67a[0], c67a[1]); // vec2
-    let s7aFWTFS = vec2(c67a[2], c67a[3]); // vec2
+    let vvUV: Vec2 = vec2(vUV[0] - prevBound[0] / uSize, vUV[1] - prevBound[1] / uSize);
+    let c01a: Vec4 = texture(substance01aTex, vvUV);
+    let c23a: Vec4 = texture(substance23aTex, vvUV);
+    let c45a: Vec4 = texture(substance45aTex, vvUV);
+    let c67a: Vec4 = texture(substance67aTex, vvUV);
+    let s0aFWTFS: Vec2 = vec2(c01a[0], c01a[1]);
+    let s1aFWTFS: Vec2 = vec2(c01a[2], c01a[3]);
+    let s2aFWTFS: Vec2 = vec2(c23a[0], c23a[1]);
+    let s3aFWTFS: Vec2 = vec2(c23a[2], c23a[3]);
+    let s4aFWTFS: Vec2 = vec2(c45a[0], c45a[1]);
+    let s5aFWTFS: Vec2 = vec2(c45a[2], c45a[3]);
+    let s6aFWTFS: Vec2 = vec2(c67a[0], c67a[1]);
+    let s7aFWTFS: Vec2 = vec2(c67a[2], c67a[3]);
 
-    // prettier-ignore
-    let s0123Bisector = vec4( // vec4
-      atan(s0aFWTFS[1], s0aFWTFS[0]), atan(s1aFWTFS[1], s1aFWTFS[0]),
-      atan(s2aFWTFS[1], s2aFWTFS[0]), atan(s3aFWTFS[1], s3aFWTFS[0])
+    let s0123Bisector: Vec4 = vec4(
+      atan(s0aFWTFS[1], s0aFWTFS[0]),
+      atan(s1aFWTFS[1], s1aFWTFS[0]),
+      atan(s2aFWTFS[1], s2aFWTFS[0]),
+      atan(s3aFWTFS[1], s3aFWTFS[0])
     );
-    // prettier-ignore
-    let s4567Bisector = vec4( // vec4
-      atan(s4aFWTFS[1], s4aFWTFS[0]), atan(s5aFWTFS[1], s5aFWTFS[0]),
-      atan(s6aFWTFS[1], s6aFWTFS[0]), atan(s7aFWTFS[1], s7aFWTFS[0])
+    let s4567Bisector: Vec4 = vec4(
+      atan(s4aFWTFS[1], s4aFWTFS[0]),
+      atan(s5aFWTFS[1], s5aFWTFS[0]),
+      atan(s6aFWTFS[1], s6aFWTFS[0]),
+      atan(s7aFWTFS[1], s7aFWTFS[0])
     );
-    let avgArc = texture(avgArcAndFloTex, vvUV)[0]; // float
-    let s0123aArc = avgArc === -1.0 ? uArc0123 : mix(uArc0123, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending0123); // vec4
-    let s4567aArc = avgArc === -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567); // vec4
+    let avgArc: Float = texture(avgArcAndFloTex, vvUV)[0];
+    let s0123aArc: Vec4 =
+      avgArc === -1.0 ? uArc0123 : mix(uArc0123, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending0123);
+    let s4567aArc: Vec4 =
+      avgArc === -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567);
 
-    let s0123aLoBound = mod(add(sub(s0123Bisector, s0123aArc), PI2), PI2); // vec4
-    let s4567aLoBound = mod(add(sub(s4567Bisector, s4567aArc), PI2), PI2); // vec4
-    let s0123aHiBound = mod(add(add(s0123Bisector, s0123aArc), PI2), PI2); // vec4
-    let s4567aHiBound = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2); // vec4
+    let s0123aLoBound: Vec4 = mod(add(sub(s0123Bisector, s0123aArc), PI2), PI2);
+    let s4567aLoBound: Vec4 = mod(add(sub(s4567Bisector, s4567aArc), PI2), PI2);
+    let s0123aHiBound: Vec4 = mod(add(add(s0123Bisector, s0123aArc), PI2), PI2);
+    let s4567aHiBound: Vec4 = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2);
     s0123aHiBound = vec4(
       s0123aLoBound[0] > s0123aHiBound[0] ? s0123aHiBound[0] + PI2 : s0123aHiBound[0],
       s0123aLoBound[1] > s0123aHiBound[1] ? s0123aHiBound[1] + PI2 : s0123aHiBound[1],
@@ -571,23 +588,23 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
       s4567aLoBound[3] > s4567aHiBound[3] ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
     );
 
-    let s0TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[0], s0123aHiBound[0]), s0Attraction); // vec2
-    let s1TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[1], s0123aHiBound[1]), s1Attraction); // vec2
-    let s2TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[2], s0123aHiBound[2]), s2Attraction); // vec2
-    let s3TransferFraction = mul(arcOverlap(loBound, hiBound, s0123aLoBound[3], s0123aHiBound[3]), s3Attraction); // vec2
-    let s4TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[0], s4567aHiBound[0]), s4Attraction); // vec2
-    let s5TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[1], s4567aHiBound[1]), s5Attraction); // vec2
-    let s6TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[2], s4567aHiBound[2]), s6Attraction); // vec2
-    let s7TransferFraction = mul(arcOverlap(loBound, hiBound, s4567aLoBound[3], s4567aHiBound[3]), s7Attraction); // vec2
+    let s0TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[0], s0123aHiBound[0]), s0Attraction);
+    let s1TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[1], s0123aHiBound[1]), s1Attraction);
+    let s2TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[2], s0123aHiBound[2]), s2Attraction);
+    let s3TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s0123aLoBound[3], s0123aHiBound[3]), s3Attraction);
+    let s4TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[0], s4567aHiBound[0]), s4Attraction);
+    let s5TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[1], s4567aHiBound[1]), s5Attraction);
+    let s6TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[2], s4567aHiBound[2]), s6Attraction);
+    let s7TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s4567aLoBound[3], s4567aHiBound[3]), s7Attraction);
 
-    let s0FloFraction = divSafe(s0TransferFraction, len(s0aFWTFS), 0.0); // vec2
-    let s1FloFraction = divSafe(s1TransferFraction, len(s1aFWTFS), 0.0); // vec2
-    let s2FloFraction = divSafe(s2TransferFraction, len(s2aFWTFS), 0.0); // vec2
-    let s3FloFraction = divSafe(s3TransferFraction, len(s3aFWTFS), 0.0); // vec2
-    let s4FloFraction = divSafe(s4TransferFraction, len(s4aFWTFS), 0.0); // vec2
-    let s5FloFraction = divSafe(s5TransferFraction, len(s5aFWTFS), 0.0); // vec2
-    let s6FloFraction = divSafe(s6TransferFraction, len(s6aFWTFS), 0.0); // vec2
-    let s7FloFraction = divSafe(s7TransferFraction, len(s7aFWTFS), 0.0); // vec2
+    let s0FloFraction: Vec2 = divSafe(s0TransferFraction, len(s0aFWTFS), 0.0);
+    let s1FloFraction: Vec2 = divSafe(s1TransferFraction, len(s1aFWTFS), 0.0);
+    let s2FloFraction: Vec2 = divSafe(s2TransferFraction, len(s2aFWTFS), 0.0);
+    let s3FloFraction: Vec2 = divSafe(s3TransferFraction, len(s3aFWTFS), 0.0);
+    let s4FloFraction: Vec2 = divSafe(s4TransferFraction, len(s4aFWTFS), 0.0);
+    let s5FloFraction: Vec2 = divSafe(s5TransferFraction, len(s5aFWTFS), 0.0);
+    let s6FloFraction: Vec2 = divSafe(s6TransferFraction, len(s6aFWTFS), 0.0);
+    let s7FloFraction: Vec2 = divSafe(s7TransferFraction, len(s7aFWTFS), 0.0);
 
     s0FloDir = add(s0FloDir, s0FloFraction);
     s1FloDir = add(s1FloDir, s1FloFraction);
@@ -612,54 +629,56 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
     }
   }
 
-  let c01Given = texture(substance01GivenTex, vUV); // vec4
-  let c23Given = texture(substance23GivenTex, vUV); // vec4
-  let c45Given = texture(substance45GivenTex, vUV); // vec4
-  let c67Given = texture(substance67GivenTex, vUV); // vec4
-  let s0Given = vec2(c01Given[0], c01Given[1]); // vec2
-  let s1Given = vec2(c01Given[2], c01Given[3]); // vec2
-  let s2Given = vec2(c23Given[0], c23Given[1]); // vec2
-  let s3Given = vec2(c23Given[2], c23Given[3]); // vec2
-  let s4Given = vec2(c45Given[0], c45Given[1]); // vec2
-  let s5Given = vec2(c45Given[2], c45Given[3]); // vec2
-  let s6Given = vec2(c67Given[0], c67Given[1]); // vec2
-  let s7Given = vec2(c67Given[2], c67Given[3]); // vec2
+  let c01Given: Vec4 = texture(substance01GivenTex, vUV);
+  let c23Given: Vec4 = texture(substance23GivenTex, vUV);
+  let c45Given: Vec4 = texture(substance45GivenTex, vUV);
+  let c67Given: Vec4 = texture(substance67GivenTex, vUV);
+  let s0Given: Vec2 = vec2(c01Given[0], c01Given[1]);
+  let s1Given: Vec2 = vec2(c01Given[2], c01Given[3]);
+  let s2Given: Vec2 = vec2(c23Given[0], c23Given[1]);
+  let s3Given: Vec2 = vec2(c23Given[2], c23Given[3]);
+  let s4Given: Vec2 = vec2(c45Given[0], c45Given[1]);
+  let s5Given: Vec2 = vec2(c45Given[2], c45Given[3]);
+  let s6Given: Vec2 = vec2(c67Given[0], c67Given[1]);
+  let s7Given: Vec2 = vec2(c67Given[2], c67Given[3]);
 
-  let s0Received = mul(normalize(s0FloDir), s0FloLen); // vec2
-  let s1Received = mul(normalize(s1FloDir), s1FloLen); // vec2
-  let s2Received = mul(normalize(s2FloDir), s2FloLen); // vec2
-  let s3Received = mul(normalize(s3FloDir), s3FloLen); // vec2
-  let s4Received = mul(normalize(s4FloDir), s4FloLen); // vec2
-  let s5Received = mul(normalize(s5FloDir), s5FloLen); // vec2
-  let s6Received = mul(normalize(s6FloDir), s6FloLen); // vec2
-  let s7Received = mul(normalize(s7FloDir), s7FloLen); // vec2
+  let s0Received: Vec2 = mul(normalize(s0FloDir), s0FloLen);
+  let s1Received: Vec2 = mul(normalize(s1FloDir), s1FloLen);
+  let s2Received: Vec2 = mul(normalize(s2FloDir), s2FloLen);
+  let s3Received: Vec2 = mul(normalize(s3FloDir), s3FloLen);
+  let s4Received: Vec2 = mul(normalize(s4FloDir), s4FloLen);
+  let s5Received: Vec2 = mul(normalize(s5FloDir), s5FloLen);
+  let s6Received: Vec2 = mul(normalize(s6FloDir), s6FloLen);
+  let s7Received: Vec2 = mul(normalize(s7FloDir), s7FloLen);
 
-  let avgFlo = texture(avgArcAndFloTex, vUV)[1]; // float // TODO: use -1 for fill
-  let s0123bFlo = avgFlo === -1.0 ? uFlo0123 : mix(uFlo0123, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending0123); // vec4
-  let s4567bFlo = avgFlo === -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567); // vec4
+  let avgFlo: Float = texture(avgArcAndFloTex, vUV)[1];
+  let s0123bFlo: Vec4 =
+    avgFlo === -1.0 ? uFlo0123 : mix(uFlo0123, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending0123);
+  let s4567bFlo: Vec4 =
+    avgFlo === -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567);
 
-  let s0Remaining = mul(s0b, 1.0 - s0123bFlo[0]); // vec2
-  let s1Remaining = mul(s1b, 1.0 - s0123bFlo[1]); // vec2
-  let s2Remaining = mul(s2b, 1.0 - s0123bFlo[2]); // vec2
-  let s3Remaining = mul(s3b, 1.0 - s0123bFlo[3]); // vec2
-  let s4Remaining = mul(s4b, 1.0 - s4567bFlo[0]); // vec2
-  let s5Remaining = mul(s5b, 1.0 - s4567bFlo[1]); // vec2
-  let s6Remaining = mul(s6b, 1.0 - s4567bFlo[2]); // vec2
-  let s7Remaining = mul(s7b, 1.0 - s4567bFlo[3]); // vec2
+  let s0Remaining: Vec2 = mul(s0b, 1.0 - s0123bFlo[0]);
+  let s1Remaining: Vec2 = mul(s1b, 1.0 - s0123bFlo[1]);
+  let s2Remaining: Vec2 = mul(s2b, 1.0 - s0123bFlo[2]);
+  let s3Remaining: Vec2 = mul(s3b, 1.0 - s0123bFlo[3]);
+  let s4Remaining: Vec2 = mul(s4b, 1.0 - s4567bFlo[0]);
+  let s5Remaining: Vec2 = mul(s5b, 1.0 - s4567bFlo[1]);
+  let s6Remaining: Vec2 = mul(s6b, 1.0 - s4567bFlo[2]);
+  let s7Remaining: Vec2 = mul(s7b, 1.0 - s4567bFlo[3]);
 
-  let s0 = mul(normalize(add(add(s0Given, s0Received), s0Remaining)), len(s0Received) + len(s0Remaining)); // vec2
-  let s1 = mul(normalize(add(add(s1Given, s1Received), s1Remaining)), len(s1Received) + len(s1Remaining)); // vec2
-  let s2 = mul(normalize(add(add(s2Given, s2Received), s2Remaining)), len(s2Received) + len(s2Remaining)); // vec2
-  let s3 = mul(normalize(add(add(s3Given, s3Received), s3Remaining)), len(s3Received) + len(s3Remaining)); // vec2
-  let s4 = mul(normalize(add(add(s4Given, s4Received), s4Remaining)), len(s4Received) + len(s4Remaining)); // vec2
-  let s5 = mul(normalize(add(add(s5Given, s5Received), s5Remaining)), len(s5Received) + len(s5Remaining)); // vec2
-  let s6 = mul(normalize(add(add(s6Given, s6Received), s6Remaining)), len(s6Received) + len(s6Remaining)); // vec2
-  let s7 = mul(normalize(add(add(s7Given, s7Received), s7Remaining)), len(s7Received) + len(s7Remaining)); // vec2
+  let s0: Vec2 = mul(normalize(add(add(s0Given, s0Received), s0Remaining)), len(s0Received) + len(s0Remaining));
+  let s1: Vec2 = mul(normalize(add(add(s1Given, s1Received), s1Remaining)), len(s1Received) + len(s1Remaining));
+  let s2: Vec2 = mul(normalize(add(add(s2Given, s2Received), s2Remaining)), len(s2Received) + len(s2Remaining));
+  let s3: Vec2 = mul(normalize(add(add(s3Given, s3Received), s3Remaining)), len(s3Received) + len(s3Remaining));
+  let s4: Vec2 = mul(normalize(add(add(s4Given, s4Received), s4Remaining)), len(s4Received) + len(s4Remaining));
+  let s5: Vec2 = mul(normalize(add(add(s5Given, s5Received), s5Remaining)), len(s5Received) + len(s5Remaining));
+  let s6: Vec2 = mul(normalize(add(add(s6Given, s6Received), s6Remaining)), len(s6Received) + len(s6Remaining));
+  let s7: Vec2 = mul(normalize(add(add(s7Given, s7Received), s7Remaining)), len(s7Received) + len(s7Remaining));
 
-  let s01 = vec4(s0[0], s0[1], s1[0], s1[1]); // vec4
-  let s23 = vec4(s2[0], s2[1], s3[0], s3[1]); // vec4
-  let s45 = vec4(s4[0], s4[1], s5[0], s5[1]); // vec4
-  let s67 = vec4(s6[0], s6[1], s7[0], s7[1]); // vec4
+  let s01: Vec4 = vec4(s0[0], s0[1], s1[0], s1[1]);
+  let s23: Vec4 = vec4(s2[0], s2[1], s3[0], s3[1]);
+  let s45: Vec4 = vec4(s4[0], s4[1], s5[0], s5[1]);
+  let s67: Vec4 = vec4(s6[0], s6[1], s7[0], s7[1]);
 
   return [s01, s23, s45, s67];
 }
@@ -753,45 +772,47 @@ function substanceReactGenerator(config) {
   const reactions = substanceReactParse(config);
   function substanceReact(vUV: Vec2, uniforms, textures: Texture[]) {
     const [substance01Tex, substance23Tex, substance45Tex, substance67Tex, address0123Tex, address4567Tex] = textures;
-    let cs01 = texture(substance01Tex, vUV); // vec4
-    let cs23 = texture(substance23Tex, vUV); // vec4
-    let cs45 = texture(substance45Tex, vUV); // vec4
-    let cs67 = texture(substance67Tex, vUV); // vec4
-    let ca0123 = texture(address0123Tex, vUV); // vec4
-    let ca4567 = texture(address4567Tex, vUV); // vec4
-    // prettier-ignore
-    let initial0 = vec4( // vec4
-      len(vec2(cs01[0], cs01[1])), len(vec2(cs01[2], cs01[3])),
-      len(vec2(cs23[0], cs23[1])), len(vec2(cs23[2], cs23[3]))
+    let cs01: Vec4 = texture(substance01Tex, vUV);
+    let cs23: Vec4 = texture(substance23Tex, vUV);
+    let cs45: Vec4 = texture(substance45Tex, vUV);
+    let cs67: Vec4 = texture(substance67Tex, vUV);
+    let ca0123: Vec4 = texture(address0123Tex, vUV);
+    let ca4567: Vec4 = texture(address4567Tex, vUV);
+    let initial0: Vec4 = vec4(
+      len(vec2(cs01[0], cs01[1])),
+      len(vec2(cs01[2], cs01[3])),
+      len(vec2(cs23[0], cs23[1])),
+      len(vec2(cs23[2], cs23[3]))
     );
-    // prettier-ignore
-    let initial1 = vec4( // vec4
-      len(vec2(cs45[0], cs45[1])), len(vec2(cs45[2], cs45[3])),
-      len(vec2(cs67[0], cs67[1])), len(vec2(cs67[2], cs67[3]))
+    let initial1: Vec4 = vec4(
+      len(vec2(cs45[0], cs45[1])),
+      len(vec2(cs45[2], cs45[3])),
+      len(vec2(cs67[0], cs67[1])),
+      len(vec2(cs67[2], cs67[3]))
     );
-    let initial2 = vec4(max(ca0123[0], 0.0), max(ca0123[1], 0.0), max(ca0123[2], 0.0), max(ca0123[3], 0.0)); // vec4
-    let initial3 = vec4(max(ca4567[0], 0.0), max(ca4567[1], 0.0), max(ca4567[2], 0.0), max(ca4567[3], 0.0)); // vec4
+    let initial2: Vec4 = vec4(max(ca0123[0], 0.0), max(ca0123[1], 0.0), max(ca0123[2], 0.0), max(ca0123[3], 0.0));
+    let initial3: Vec4 = vec4(max(ca4567[0], 0.0), max(ca4567[1], 0.0), max(ca4567[2], 0.0), max(ca4567[3], 0.0));
 
-    let input0 = initial0; // vec4
-    let input1 = initial1; // vec4
-    let input2 = initial2; // vec4
-    let input3 = initial3; // vec4
-    let output0 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-    let output1 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-    let output2 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-    let output3 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
+    let input0: Vec4 = initial0;
+    let input1: Vec4 = initial1;
+    let input2: Vec4 = initial2;
+    let input3: Vec4 = initial3;
+    let output0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let output1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let output2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let output3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
 
     const rWeights = reactions.map((r) => eval(r.weight));
 
     for (let i = 0; i < 16; i++) {
-      let i0 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let i1 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let i2 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let i3 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let o0 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let o1 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let o2 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
-      let o3 = vec4(0.0, 0.0, 0.0, 0.0); // vec4
+      let i0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let i1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let i2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let i3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let o0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let o1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let o2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let o3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
 
       for (const i in reactions) {
         const [rInput0, rInput1, rInput2, rInput3, rOutput0, rOutput1, rOutput2, rOutput3] = reactions[i].uniforms;
@@ -801,13 +822,12 @@ function substanceReactGenerator(config) {
           dot(initial2, rOutput2) === 0.0 &&
           dot(initial3, rOutput3) === 0.0
         ) {
-          // prettier-ignore
-          let iaVec = min( // vec4
+          let iaVec: Vec4 = min(
             min(divSafe(input0, rInput0, 9999999.9), divSafe(input1, rInput1, 9999999.9)),
             min(divSafe(input2, rInput2, 9999999.9), divSafe(input3, rInput3, 9999999.9))
           );
-          let inputAvailability = min(min(iaVec[0], iaVec[1]), min(iaVec[2], iaVec[3])); // float
-          let reactionSpeed = inputAvailability * rWeight; // float
+          let inputAvailability: Float = min(min(iaVec[0], iaVec[1]), min(iaVec[2], iaVec[3]));
+          let reactionSpeed: Float = inputAvailability * rWeight;
           i0 = add(i0, mul(rInput0, reactionSpeed));
           i1 = add(i1, mul(rInput1, reactionSpeed));
           i2 = add(i2, mul(rInput2, reactionSpeed));
@@ -818,12 +838,14 @@ function substanceReactGenerator(config) {
           o3 = add(o3, mul(rOutput3, reactionSpeed));
         }
       }
-      // prettier-ignore
-      let scalebackVec = max( // vec4
+      let scalebackVec: Vec4 = max(
         max(divSafe(input0, i0, 0.0), divSafe(input1, i1, 0.0)),
         max(divSafe(input2, i2, 0.0), divSafe(input3, i3, 0.0))
       );
-      let scaleback = min(max(max(scalebackVec[0], scalebackVec[1]), max(scalebackVec[2], scalebackVec[3])), 1.0); // float
+      let scaleback: Float = min(
+        max(max(scalebackVec[0], scalebackVec[1]), max(scalebackVec[2], scalebackVec[3])),
+        1.0
+      );
       input0 = sub(input0, mul(i0, scaleback));
       input1 = sub(input1, mul(i1, scaleback));
       input2 = sub(input2, mul(i2, scaleback));
@@ -838,16 +860,16 @@ function substanceReactGenerator(config) {
     }
     let final0 = add(input0, output0);
     let final1 = add(input1, output1);
-    let s0 = mul(normalize(vec2(cs01[0], cs01[1])), final0[0]); // vec2
-    let s1 = mul(normalize(vec2(cs01[2], cs01[3])), final0[1]); // vec2
-    let s2 = mul(normalize(vec2(cs23[0], cs23[1])), final0[2]); // vec2
-    let s3 = mul(normalize(vec2(cs23[2], cs23[3])), final0[3]); // vec2
-    let s4 = mul(normalize(vec2(cs45[0], cs45[1])), final1[0]); // vec2
-    let s5 = mul(normalize(vec2(cs45[2], cs45[3])), final1[1]); // vec2
-    let s6 = mul(normalize(vec2(cs67[0], cs67[1])), final1[2]); // vec2
-    let s7 = mul(normalize(vec2(cs67[2], cs67[3])), final1[3]); // vec2
-    let a0123 = sub(input2, output2); // vec4
-    let a4567 = sub(input3, output3); // vec4
+    let s0: Vec2 = mul(normalize(vec2(cs01[0], cs01[1])), final0[0]);
+    let s1: Vec2 = mul(normalize(vec2(cs01[2], cs01[3])), final0[1]);
+    let s2: Vec2 = mul(normalize(vec2(cs23[0], cs23[1])), final0[2]);
+    let s3: Vec2 = mul(normalize(vec2(cs23[2], cs23[3])), final0[3]);
+    let s4: Vec2 = mul(normalize(vec2(cs45[0], cs45[1])), final1[0]);
+    let s5: Vec2 = mul(normalize(vec2(cs45[2], cs45[3])), final1[1]);
+    let s6: Vec2 = mul(normalize(vec2(cs67[0], cs67[1])), final1[2]);
+    let s7: Vec2 = mul(normalize(vec2(cs67[2], cs67[3])), final1[3]);
+    let a0123: Vec4 = sub(input2, output2);
+    let a4567: Vec4 = sub(input3, output3);
 
     return [
       vec4(s0[0], s0[1], s1[0], s1[1]),
