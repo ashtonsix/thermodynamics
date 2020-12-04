@@ -3,7 +3,7 @@
 precision highp float;
 
 in vec2 vUV;
-uniform lowp sampler3D texture1;
+uniform sampler2D texture1;
 layout(std140) uniform SceneUniforms {
   float uSize;
   float centripetalFactorX;
