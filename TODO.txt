@@ -1,24 +1,9 @@
-reduceStream
-return anima to source
-dye behaviour for anima
-TOML
 seperate brightness/contrast for each displayMode
-two display modes side-by-side
 time control - step
 reset simulation
-determinstic random number generator
-continous corrections for total energy
-import/export/save
-social media share/record
-update size/wall without reset
+update size without reset
 automatic error/context-loss recovery
 double slit experiment
-better UI controls
-displayMode - energy relative to neighbouring pixels
-add centripetalFactorTheta
-multiple anima sources
-anima source movement
-anima source display as 3x3 square
 
 
 
@@ -30,7 +15,7 @@ for documentation: https://github.com/benweet/stackedit
 
 ability to save/load simulations
 intuitive controls for simulation
-statistics
+record and display statistics
 display modes
 'write' extension
 hexagon-based grid
@@ -41,3 +26,5 @@ ability to embed simulations into video course
 vector field visualisation
 conditional reaction weights
 weighted direction blending for each substance
+dynamic uniforms (display, reactions, etc)
+pipette and draw tools for write kernel
