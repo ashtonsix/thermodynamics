@@ -38,3 +38,6 @@ multiple display modes at once, displayed side-by-side
 determinstic randomness (reproducibility)
 website, with user accounts and ability to store/share simulations
 ability to embed simulations into video course
+vector field visualisation
+conditional reaction weights
+weighted direction blending for each substance

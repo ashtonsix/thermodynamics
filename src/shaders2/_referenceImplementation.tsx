@@ -772,6 +772,15 @@ function substanceReactGenerator(config) {
   const reactions = substanceReactParse(config);
   function substanceReact(vUV: Vec2, uniforms, textures: Texture[]) {
     const [substance01Tex, substance23Tex, substance45Tex, substance67Tex, address0123Tex, address4567Tex] = textures;
+    // prettier-ignore
+    const [
+      /* uArc0123, uArcWeight0123, uArcBlending0123, */
+      /* uFlo0123, uFloWeight0123, uFloBlending0123, */
+                uDirWeight0123, /* uDirBlending0123, */
+      /* uArc4567, uArcWeight4567, uArcBlending4567, */
+      /* uFlo4567, uFloWeight4567, uFloBlending4567, */
+                uDirWeight4567, /* uDirBlending4567, */
+    ] = uniforms.substance;
     let cs01: Vec4 = texture(substance01Tex, vUV);
     let cs23: Vec4 = texture(substance23Tex, vUV);
     let cs45: Vec4 = texture(substance45Tex, vUV);
@@ -854,45 +863,90 @@ function substanceReactGenerator(config) {
       output1 = add(output1, mul(o1, scaleback));
       output2 = add(output2, mul(o2, scaleback));
       output3 = add(output3, mul(o3, scaleback));
-      if (sum(vec4(sum(i0), sum(i1), sum(i2), sum(i3))) < epsilon) {
+      if (scaleback === 1.0 || sum(vec4(sum(i0), sum(i1), sum(i2), sum(i3))) < epsilon) {
         break;
       }
     }
     let final0: Vec4 = max(add(input0, output0), 0.0);
     let final1: Vec4 = max(add(input1, output1), 0.0);
-    let s0: Vec2 = mul(normalize(vec2(cs01[0], cs01[1])), final0[0]);
-    let s1: Vec2 = mul(normalize(vec2(cs01[2], cs01[3])), final0[1]);
-    let s2: Vec2 = mul(normalize(vec2(cs23[0], cs23[1])), final0[2]);
-    let s3: Vec2 = mul(normalize(vec2(cs23[2], cs23[3])), final0[3]);
-    let s4: Vec2 = mul(normalize(vec2(cs45[0], cs45[1])), final1[0]);
-    let s5: Vec2 = mul(normalize(vec2(cs45[2], cs45[3])), final1[1]);
-    let s6: Vec2 = mul(normalize(vec2(cs67[0], cs67[1])), final1[2]);
-    let s7: Vec2 = mul(normalize(vec2(cs67[2], cs67[3])), final1[3]);
-    // TODO: if initial address >0 do max(epsilon)
-    let a0123: Vec4 = sub(input2, output2);
-    let a4567: Vec4 = sub(input3, output3);
+
+    let s0123X: Vec4 = vec4(cs01[0], cs01[2], cs23[0], cs23[2]);
+    let s4567X: Vec4 = vec4(cs45[0], cs45[2], cs67[0], cs67[2]);
+    let s0123Y: Vec4 = vec4(cs01[1], cs01[3], cs23[1], cs23[3]);
+    let s4567Y: Vec4 = vec4(cs45[1], cs45[3], cs67[1], cs67[3]);
+    let avgDir: Vec2 = normalize(
+      vec2(
+        dot(s0123X, uDirWeight0123) + dot(s4567X, uDirWeight4567),
+        dot(s0123Y, uDirWeight0123) + dot(s4567Y, uDirWeight4567)
+      )
+    );
+
+    let s0: Vec2 = mul(normalize(mix(avgDir, vec2(cs01[0], cs01[1]), epsilon)), final0[0]);
+    let s1: Vec2 = mul(normalize(mix(avgDir, vec2(cs01[2], cs01[3]), epsilon)), final0[1]);
+    let s2: Vec2 = mul(normalize(mix(avgDir, vec2(cs23[0], cs23[1]), epsilon)), final0[2]);
+    let s3: Vec2 = mul(normalize(mix(avgDir, vec2(cs23[2], cs23[3]), epsilon)), final0[3]);
+    let s4: Vec2 = mul(normalize(mix(avgDir, vec2(cs45[0], cs45[1]), epsilon)), final1[0]);
+    let s5: Vec2 = mul(normalize(mix(avgDir, vec2(cs45[2], cs45[3]), epsilon)), final1[1]);
+    let s6: Vec2 = mul(normalize(mix(avgDir, vec2(cs67[0], cs67[1]), epsilon)), final1[2]);
+    let s7: Vec2 = mul(normalize(mix(avgDir, vec2(cs67[2], cs67[3]), epsilon)), final1[3]);
+    let a0: Float = initial2[0] > 0 ? max(initial2[0] - output2[0], epsilon) : -output2[0];
+    let a1: Float = initial2[1] > 0 ? max(initial2[1] - output2[1], epsilon) : -output2[1];
+    let a2: Float = initial2[2] > 0 ? max(initial2[2] - output2[2], epsilon) : -output2[2];
+    let a3: Float = initial2[3] > 0 ? max(initial2[3] - output2[3], epsilon) : -output2[3];
+    let a4: Float = initial3[0] > 0 ? max(initial3[0] - output3[0], epsilon) : -output3[0];
+    let a5: Float = initial3[1] > 0 ? max(initial3[1] - output3[1], epsilon) : -output3[1];
+    let a6: Float = initial3[2] > 0 ? max(initial3[2] - output3[2], epsilon) : -output3[2];
+    let a7: Float = initial3[3] > 0 ? max(initial3[3] - output3[3], epsilon) : -output3[3];
 
     return [
       vec4(s0[0], s0[1], s1[0], s1[1]),
       vec4(s2[0], s2[1], s3[0], s3[1]),
       vec4(s4[0], s4[1], s5[0], s5[1]),
       vec4(s6[0], s6[1], s7[0], s7[1]),
-      a0123,
-      a4567,
+      vec4(a0, a1, a2, a3),
+      vec4(a4, a5, a6, a7),
     ];
   }
 
   return substanceReact;
 }
-// function addressPrepare(vUV: Vec2, uniforms, textures: Texture[]) {}
-// function addressRun(vUV: Vec2, uniforms, textures: Texture[]) {}
+function addressPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
+  const [address0123Tex, address4567Tex] = textures;
+
+  let ca0123: Vec4 = texture(address0123Tex, vUV);
+  let ca4567: Vec4 = texture(address4567Tex, vUV);
+  return [max(mul(ca0123, -1.0), 0.0), max(mul(ca4567, -1.0), 0.0)];
+}
+function addressRun(vUV: Vec2, uniforms, textures: Texture[]) {
+  const [address0123Tex, address4567Tex, addressTotal0123Tex, addressTotal4567Tex] = textures;
+
+  let ca0123: Vec4 = texture(address0123Tex, vUV);
+  let ca4567: Vec4 = texture(address4567Tex, vUV);
+  let cat0123: Vec4 = texture(addressTotal0123Tex, vUV);
+  let cat4567: Vec4 = texture(addressTotal4567Tex, vUV);
+
+  return [
+    vec4(
+      ca0123[0] > 0 ? ca0123[0] + cat0123[0] : ca0123[0],
+      ca0123[1] > 0 ? ca0123[1] + cat0123[1] : ca0123[1],
+      ca0123[2] > 0 ? ca0123[2] + cat0123[2] : ca0123[2],
+      ca0123[3] > 0 ? ca0123[3] + cat0123[3] : ca0123[3]
+    ),
+    vec4(
+      ca4567[0] > 0 ? ca4567[0] + cat4567[0] : ca4567[0],
+      ca4567[1] > 0 ? ca4567[1] + cat4567[1] : ca4567[1],
+      ca4567[2] > 0 ? ca4567[2] + cat4567[2] : ca4567[2],
+      ca4567[3] > 0 ? ca4567[3] + cat4567[3] : ca4567[3]
+    ),
+  ];
+}
 
 class Sim {
   size = null;
   uniforms = null;
   textures = {};
-  reduce(texture) {
-    return this.textures[texture].reduce(
+  reduce(textureIn, textureOut) {
+    const total = this.textures[textureIn].reduce(
       (pv, v) =>
         add(
           pv,
@@ -900,6 +954,7 @@ class Sim {
         ),
       [0, 0, 0, 0]
     );
+    this.textures[textureOut] = [[total]];
   }
   compute(shader, texturesIn, texturesOut) {
     let buffer = {};
@@ -956,7 +1011,7 @@ function generateTextures(generators, size) {
 // prettier-ignore
 const config = {
   seed: -1,
-  size: 1,
+  size: 4,
   transferRadius: 1,
   substances: [
     {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
@@ -980,7 +1035,9 @@ const config = {
   },
   reactionParameters: {},
   reactions: [
-    "A -> B, 1.0",
+    "A + B -> 2C, 0.12",
+    "B + C -> 2A, 0.10",
+    "C + A -> 2B, 0.10",
   ],
 }
 
@@ -1043,11 +1100,13 @@ function cycle(sim: Sim) {
     ['s01', 's23', 's45', 's67', 's0123Len', 's4567Len'],
     ['s01FWTFS', 's23FWTFS', 's45FWTFS', 's67FWTFS', 's01Given', 's23Given', 's45Given', 's67Given', 'avgArcAndFlo']
   );
-  console.log(sim.reduce('s0123Len'));
-  print(sim.textures['s01']);
-  print(sim.textures['s01FWTFS']);
-  print(sim.textures['s01Given']);
-  console.log('-');
+  {
+    sim.reduce('s0123Len', 's0123LenTotal');
+    print(sim.textures['s0123LenTotal']);
+    print(sim.textures['s01']);
+    // print(sim.textures['s01FWTFS']);
+    // print(sim.textures['s01Given']);
+  }
 
   // prettier-ignore
   sim.compute(
@@ -1066,6 +1125,10 @@ function cycle(sim: Sim) {
     ['s01', 's23', 's45', 's67', 'a0123', 'a4567'],
     ['s01', 's23', 's45', 's67', 'a0123', 'a4567']
   );
+  sim.compute(addressPrepare, ['a0123', 'a4567'], ['ap0123', 'ap4567']);
+  sim.reduce('ap0123', 'at0123');
+  sim.reduce('ap4567', 'at4567');
+  sim.compute(addressRun, ['a0123', 'a4567', 'at0123', 'at4567'], ['a0123', 'a4567']);
   // await sim.display([
   //   's01', 's23', 's45', 's67',
   //   's01Prev', 's23Prev', 's45Prev', 's67Prev',
@@ -1075,8 +1138,15 @@ function cycle(sim: Sim) {
 }
 
 function print(texture) {
-  const string = texture.map((row) => row.map(([x, y]) => len([x, y]).toFixed(2).padStart(6)).join(' ')).join('\n');
-  console.log(string);
+  const string1 = texture
+    .map((row) => row.map(([x, y, ,]) => len([x, y]).toFixed(2).padStart(6)).join(' '))
+    .join('\n');
+  const string2 = texture
+    .map((row) => row.map(([, , x, y]) => len([x, y]).toFixed(2).padStart(6)).join(' '))
+    .join('\n');
+  console.log(string1);
+  console.log(string2);
+  console.log('\n');
 }
 
 export default function main() {
@@ -1089,7 +1159,7 @@ export default function main() {
     [
       {
         energy: (x, y, size) => {
-          return 1;
+          return Math.random();
         },
         direction: (x, y, size) => 0,
       },
@@ -1107,5 +1177,5 @@ export default function main() {
   Object.assign(sim.textures, textures);
   sim.size = config.size;
   sim.uniforms = uniforms;
-  cycle(sim);
+  for (let i = 0; i < 50; i++) cycle(sim);
 }
