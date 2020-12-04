@@ -1,184 +1,128 @@
-import {PicoGL} from 'picogl/build/module/picogl'
-import quadShader from './shaders/quad.vert'
-import displayShader from './shaders/display.frag'
-import reduce1Shader from './shaders/reduce1.frag'
-import reduce2Shader from './shaders/reduce2.frag'
+import ShaderBridge from './ShaderBridge'
+import cycle from './shaders2/cycle.frag'
+import display from './shaders2/display.frag'
+import {
+  configToUniforms,
+  generateTextures,
+  substanceReactParse,
+} from './shaders2/common'
 
-const defaultOptions = {
-  centripetalFactorX: 1,
-  centripetalFactorY: 0,
-  transferAngleRegular: Math.PI * (2 / 3),
-  transferAngleCentripetal: Math.PI * (1 / 3),
-  transferRadius: 1,
-  transferFractionRegular: 0.5,
-  transferFractionAnima: 0.5,
-  displayMode: 1,
-  size: 100,
-  magnify: 8,
+const doInserts = (str, inserts) => {
+  str = str.replace(
+    /\/\*\s*insert:(\w+)(?:.|\n)*?\*\//gm,
+    (match, key) => inserts[key] || match
+  )
+  str = str.replace(
+    /\/\*\s*insert-start:(\w+)(?:.|\n)*?insert-end(?:.|\n)*?\*\//gm,
+    (match, key) => inserts[key] || match
+  )
+  return str
 }
 
-export default class Simulation {
-  destroyed = false
-  options = null
-  canvas = null
-  pico = null
-  programs = {}
-  quads = {full: null, reduce1: null, reduce2: null}
-  textures = {read: {}, write: {}}
-  async compute(fragShader, texturesIn, texturesOut) {
-    this.draw(fragShader, texturesIn, texturesOut, 'full')
-  }
-  async display(texturesIn) {
-    this.draw(displayShader, texturesIn, 'screen', 'full')
-  }
-  async reduce(textureIn: string, textureOut: string) {
-    this.draw(reduce1Shader, [textureIn], ['reduce1'], 'reduce1')
-    this.draw(reduce2Shader, ['reduce1'], [textureOut], 'reduce2')
-  }
-  async draw(fragShader, texturesIn, texturesOut, quadName) {
-    const {pico, programs} = this
-    const quad = this.quads[quadName]
+const copyPaste = doInserts(cycle, {main: 'copyPaste()'})
+const compactLength = doInserts(cycle, {main: 'compactLength()'})
+const transferPrepare = doInserts(cycle, {main: 'transferPrepare()'})
+const transferRun = doInserts(cycle, {main: 'transferRun()'})
+const addressPrepare = doInserts(cycle, {main: 'addressPrepare()'})
+const addressRun = doInserts(cycle, {main: 'addressRun()'})
 
-    let program
-    if (programs[fragShader]) {
-      program = programs[fragShader]
-    } else {
-      program = await pico.createProgram(quadShader, fragShader)
-      programs[fragShader] = program
-    }
+function substanceReactGenerator(config) {
+  const parsed = substanceReactParse(config)
 
-    const drawCall = pico.createDrawCall(program, quad)
-    for (const i in texturesIn) {
-      drawCall.texture(
-        'texture' + (+i + 1),
-        this.getTexture(texturesIn[i], 'read', 'full')
+  if (parsed.length === 0) {
+    return doInserts(cycle, {main: 'substanceReact()', reactionCount: 0})
+  }
+
+  const reactions = parsed
+    .map(({uniforms}) => {
+      return (
+        'Reaction(' +
+        uniforms
+          .map((u) => `vec4(${u.map((v) => v.toFixed(1)).join(', ')})`)
+          .join(', ') +
+        ')'
       )
-    }
-    drawCall.uniformBlock('SceneUniforms', this.getUniformBuffer())
+    })
+    .join(', ')
 
-    if (texturesOut === 'screen') {
-      pico.defaultDrawFramebuffer().clear()
-      drawCall.draw()
-    } else {
-      const frameBuffer = pico.createFramebuffer()
-      for (const i in texturesOut) {
-        frameBuffer.colorTarget(
-          +i,
-          this.getTexture(texturesOut[i], 'write', quadName)
-        )
-      }
-      pico.drawFramebuffer(frameBuffer).clear()
-      drawCall.draw()
-      frameBuffer.delete()
-      for (const i in texturesOut) {
-        this.rotateTexture(texturesOut[i])
-      }
-    }
+  const reactionWeights = parsed.map(({weight}) => weight).join(', ')
 
-    return drawCall
-  }
-  setData(textures) {
-    for (const k in textures) {
-      this.getTexture(k, 'read', 'full').data(textures[k])
-      this.getTexture(k, 'write', 'full').data(textures[k])
-    }
-  }
-  getUniformBuffer() {
-    const {options, pico} = this
-    if (options.transferRadius - 0.5 === Math.floor(options.transferRadius)) {
-      options.transferRadius -= 0.000001
-    }
-    const a = [
-      options.size,
-      options.centripetalFactorX,
-      options.centripetalFactorY,
-      options.transferAngleRegular,
-      options.transferAngleCentripetal,
-      options.transferRadius,
-      options.transferFractionRegular,
-      options.transferFractionAnima,
-      options.displayMode,
-      options.brightness,
-      options.contrast,
-    ]
-    const uniformBuffer = pico.createUniformBuffer(
-      new Array(a.length).fill(PicoGL.FLOAT)
-    )
-    for (const i in a) uniformBuffer.set(i, a[i])
-    uniformBuffer.update()
-    return uniformBuffer
-  }
-  getQuad(xmin, xmax, ymin, ymax) {
-    const {pico} = this
+  return doInserts(cycle, {
+    main: 'substanceReact()',
+    reactions,
+    reactionWeights,
+    reactionCount: reactions.length,
+  })
+}
 
+export default class Sim {
+  config = null
+  shaderBridge: ShaderBridge = null
+  canvas: HTMLCanvasElement = null
+  async cycle() {
+    const sim = this.shaderBridge
+    sim.uniforms = configToUniforms(this.config)
+    await sim.compute(copyPaste, ['s01'], ['s01Prev'])
+    await sim.compute(copyPaste, ['s23'], ['s23Prev'])
+    await sim.compute(copyPaste, ['s45'], ['s45Prev'])
+    await sim.compute(copyPaste, ['s67'], ['s67Prev'])
+    await sim.compute(compactLength, ['s01', 's23'], ['s0123Len'])
+    await sim.compute(compactLength, ['s45', 's67'], ['s4567Len'])
     // prettier-ignore
-    const quadGeom = new Float32Array([
-      xmin,ymin, xmin,ymax, xmax,ymax,
-      xmin,ymin, xmax,ymin, xmax,ymax,
+    await sim.compute(
+      transferPrepare,
+      ['s01', 's23', 's0123Len', 's45', 's67', 's4567Len'],
+      [
+        's01FWTFS', 's23FWTFS', 's01Given', 's23Given', 'avgArcAndFlo',
+        's45FWTFS', 's67FWTFS', 's45Given', 's67Given',
+      ]
+    );
+    // prettier-ignore
+    await sim.compute(
+      transferRun,
+      [
+        's01', 's23', 's01FWTFS', 's23FWTFS', 's01Given', 's23Given', 'avgArcAndFlo',
+        's45', 's67', 's45FWTFS', 's67FWTFS', 's45Given', 's67Given',
+      ],
+      ['s01', 's23', 's45', 's67']
+    );
+    // const substanceReact = substanceReactGenerator(this.config)
+    // await sim.compute(
+    //   substanceReact,
+    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67'],
+    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67']
+    // )
+    // await sim.compute(addressPrepare, ['a0123', 'a4567'], ['ap0123', 'ap4567'])
+    // await sim.reduce('ap0123', 'at0123')
+    // await sim.reduce('ap4567', 'at4567')
+    // await sim.compute(
+    //   addressRun,
+    //   ['a0123', 'a4567', 'at0123', 'at4567'],
+    //   ['a0123', 'a4567']
+    // )
+    // prettier-ignore
+    await sim.display(display, [
+      's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567', 's45',
+      's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
     ])
-    const quadVertexBuffer = pico.createVertexBuffer(PicoGL.FLOAT, 2, quadGeom)
-    const quadVertexArray = pico
-      .createVertexArray()
-      .vertexAttributeBuffer(0, quadVertexBuffer)
-
-    return quadVertexArray
   }
-  getTexture(
-    name,
-    io: 'read' | 'write',
-    quadName: 'full' | 'reduce1' | 'reduce2'
-  ) {
-    const {pico, textures, options} = this
-    const [width, height] = {
-      full: [options.size, options.size],
-      reduce1: [1, options.size],
-      reduce2: [1, 1],
-    }[quadName]
-
-    if (textures[io][name]) return textures[io][name]
-
-    const params = {internalFormat: PicoGL.RGBA32F}
-    textures.read[name] = pico.createTexture2D(width, height, params)
-    textures.write[name] = pico.createTexture2D(width, height, params)
-    textures.read[name].data(
-      new Float32Array(new Array(width * height * 4).fill(0))
-    )
-    textures.write[name].data(
-      new Float32Array(new Array(width * height * 4).fill(0))
-    )
-
-    return textures[io][name]
-  }
-  rotateTexture(name) {
-    const {textures} = this
-    const t = textures.read[name]
-    textures.read[name] = textures.write[name]
-    textures.write[name] = t
-  }
-  constructor(options) {
-    options = {...defaultOptions, ...options}
-
-    const canvas = document.createElement('canvas')
-    canvas.style.width = options.size * options.magnify + 'px'
-    canvas.style.height = options.size * options.magnify + 'px'
-    canvas.style.imageRendering = 'pixelated'
-    canvas.setAttribute('width', options.size + 'px')
-    canvas.setAttribute('height', options.size + 'px')
-
-    const pico = PicoGL.createApp(canvas).clearColor(1.0, 1.0, 1.0, 1.0)
-
-    this.options = options
-    this.canvas = canvas
-    this.pico = pico
-
-    const oz = -1 + 2 / options.size
-    this.quads.full = this.getQuad(-1, 1, -1, 1)
-    this.quads.reduce1 = this.getQuad(-1, oz, -1, 1)
-    this.quads.reduce2 = this.getQuad(-1, oz, -1, oz)
+  async display() {
+    const sim = this.shaderBridge
+    sim.uniforms = configToUniforms(this.config)
+    // prettier-ignore
+    await sim.display(display, [
+      's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567', 's45',
+      's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
+    ])
   }
   destroy() {
-    for (const k in this.textures.read) this.textures.read[k].delete()
-    for (const k in this.textures.write) this.textures.write[k].delete()
-    this.destroyed = true
+    this.shaderBridge.destroy()
+  }
+  constructor(config, texturePack) {
+    const textures = generateTextures(texturePack, config.size)
+    this.config = config
+    this.shaderBridge = new ShaderBridge(config.size)
+    this.shaderBridge.setData(textures)
+    this.canvas = this.shaderBridge.canvas
   }
 }

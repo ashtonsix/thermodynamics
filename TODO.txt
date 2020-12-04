@@ -28,3 +28,5 @@ conditional reaction weights
 weighted direction blending for each substance
 dynamic uniforms (display, reactions, etc)
 pipette and draw tools for write kernel
+improved effciency for simulations using less than 4 substances
+sliders for overall concentration of substances

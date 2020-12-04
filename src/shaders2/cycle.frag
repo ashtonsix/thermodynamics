@@ -38,7 +38,7 @@ layout(std140) uniform SubstanceUniforms {
   vec4 uDirWeight4567;
   vec4 uDirBlending4567;
 };
-layout(std140) uniform SubstanceAttractionMatrix {
+layout(std140) uniform SubstanceAttractionMatrixUniforms {
   vec4 am0x0123;
   vec4 am1x0123;
   vec4 am2x0123;
@@ -689,9 +689,9 @@ void substanceReact() {
   vec4 output3 = vec4(0.0, 0.0, 0.0, 0.0);
 
   float rWeights[] = float[](
-    /* insert-start:reaction-weights */
+    /* insert-start:reactionWeights */
     1.0
-    /* insert-end:reaction-weights */
+    /* insert-end:reactionWeights */
   );
 
   for (int i = 0; i < 16; i++) {
@@ -704,7 +704,7 @@ void substanceReact() {
     vec4 o2 = vec4(0.0, 0.0, 0.0, 0.0);
     vec4 o3 = vec4(0.0, 0.0, 0.0, 0.0);
 
-    for (int j = 0; j < /* insert-start:reaction-count */ 1 /* insert-end:reaction-count */; j++) {
+    for (int j = 0; j < /* insert-start:reactionCount */ 1 /* insert-end:reactionCount */; j++) {
       Reaction r = reactions[j];
       float rWeight = rWeights[j];
       if (
@@ -770,14 +770,14 @@ void substanceReact() {
   vec2 s5 = (normalize(mix(avgDir, vec2(cs45.z, cs45.w), epsilon)) * final1.y);
   vec2 s6 = (normalize(mix(avgDir, vec2(cs67.x, cs67.y), epsilon)) * final1.z);
   vec2 s7 = (normalize(mix(avgDir, vec2(cs67.z, cs67.w), epsilon)) * final1.w);
-  float a0 = initial2.x > 0.0 ? max(initial2.x - output2.x, epsilon) : -output2.x;
-  float a1 = initial2.y > 0.0 ? max(initial2.y - output2.y, epsilon) : -output2.y;
-  float a2 = initial2.z > 0.0 ? max(initial2.z - output2.z, epsilon) : -output2.z;
-  float a3 = initial2.w > 0.0 ? max(initial2.w - output2.w, epsilon) : -output2.w;
-  float a4 = initial3.x > 0.0 ? max(initial3.x - output3.x, epsilon) : -output3.x;
-  float a5 = initial3.y > 0.0 ? max(initial3.y - output3.y, epsilon) : -output3.y;
-  float a6 = initial3.z > 0.0 ? max(initial3.z - output3.z, epsilon) : -output3.z;
-  float a7 = initial3.w > 0.0 ? max(initial3.w - output3.w, epsilon) : -output3.w;
+  float a0 = initial2.x > 0.0 ? max(input2.x, epsilon) : -output2.x;
+  float a1 = initial2.y > 0.0 ? max(input2.y, epsilon) : -output2.y;
+  float a2 = initial2.z > 0.0 ? max(input2.z, epsilon) : -output2.z;
+  float a3 = initial2.w > 0.0 ? max(input2.w, epsilon) : -output2.w;
+  float a4 = initial3.x > 0.0 ? max(input3.x, epsilon) : -output3.x;
+  float a5 = initial3.y > 0.0 ? max(input3.y, epsilon) : -output3.y;
+  float a6 = initial3.z > 0.0 ? max(input3.z, epsilon) : -output3.z;
+  float a7 = initial3.w > 0.0 ? max(input3.w, epsilon) : -output3.w;
 
   fragColor0 = vec4(s0.x, s0.y, s1.x, s1.y);
   fragColor1 = vec4(s2.x, s2.y, s3.x, s3.y);
@@ -812,4 +812,8 @@ void addressRun() {
     ca4567.z > 0.0 ? ca4567.z + cat4567.z : ca4567.z,
     ca4567.w > 0.0 ? ca4567.w + cat4567.w : ca4567.w
   );
+}
+
+void main() {
+  /* insert:main */
 }

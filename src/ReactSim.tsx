@@ -1,57 +1,47 @@
 import './index.css'
 import React, {useRef, useEffect, useState} from 'react'
 
-import Simulation from './Sim'
-import copyPaste from './shaders/copyPaste.frag'
-import displacePrepare from './shaders/displacePrepare.frag'
-import displaceRun from './shaders/displaceRun.frag'
-import animaSourcePrepare from './shaders/animaSourcePrepare.frag'
-import animaSourceRun from './shaders/animaSourceRun.frag'
+import Sim from './Sim'
 import useInterval from './useInterval'
 
-const ReactSim = ({initialState, options, playing}) => {
+const frameRate = 5
+const magnify = 20
+
+const ReactSim = ({config, texturePack, playing}) => {
   const ref = useRef(null as any)
-  const [sim, setSim] = useState(null as Simulation)
+  const [sim, setSim] = useState(null as Sim)
   ;(window as any).sim = sim
 
   useEffect(() => {
-    const sim = new Simulation(options)
-    sim.setData(initialState)
+    const sim = new Sim(config, texturePack)
     setSim(sim)
 
     const container = ref.current
-    container.appendChild(sim.canvas)
-    sim.display(['primary', 'primary2', 'anima'])
+    sim.canvas.style.width = config.size * magnify + 'px'
+    sim.canvas.style.height = config.size * magnify + 'px'
+    container.appendChild(sim.shaderBridge.canvas)
+    sim.display()
 
     return () => {
       sim.destroy()
       container.innerHTML = ''
     }
-  }, [])
+  }, []) // eslint-disable-line
 
   useEffect(() => {
     if (!sim) return
-    sim.canvas.style.width = options.size * options.magnify + 'px'
-    sim.canvas.style.height = options.size * options.magnify + 'px'
-    Object.assign(sim.options, options)
-    sim.display(['primary', 'primary2', 'anima'])
-  }, [options])
+    sim.canvas.style.width = config.size * magnify + 'px'
+    sim.canvas.style.height = config.size * magnify + 'px'
+    Object.assign(sim.config, config)
+    sim.display()
+  }, [config]) // eslint-disable-line
 
   useInterval(
     async () => {
       if (!playing || !sim) return
-      Object.assign(sim.options, options)
-      await sim.compute(copyPaste, ['primary'], ['primary2'])
-      await sim.compute(displacePrepare, ['primary'], ['primary'])
-      await sim.compute(displaceRun, ['primary', 'anima'], ['primary', 'anima'])
-      // prettier-ignore
-      await sim.compute(animaSourcePrepare, ['primary', 'anima'], ['primary', 'anima', 'animaSourcePrepared'])
-      await sim.reduce('animaSourcePrepared', 'animaSourceTotal')
-      // prettier-ignore
-      await sim.compute(animaSourceRun, ['primary', 'anima', 'animaSourceTotal'], ['primary', 'anima'])
-      await sim.display(['primary', 'primary2', 'anima'])
+      await sim.cycle()
     },
-    playing ? 1000 / options.frameRate : 0
+    playing ? 1000 / frameRate : 0
   )
 
   return (
@@ -59,7 +49,7 @@ const ReactSim = ({initialState, options, playing}) => {
       ref={ref}
       style={{
         display: 'inline-block',
-        width: options.size * options.magnify,
+        width: config.size * magnify,
       }}
     ></div>
   )
