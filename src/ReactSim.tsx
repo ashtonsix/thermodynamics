@@ -4,10 +4,7 @@ import React, {useRef, useEffect, useState} from 'react'
 import Sim from './Sim'
 import useInterval from './useInterval'
 
-const frameRate = 10
-const magnify = 4
-
-const ReactSim = ({config, texturePack, playing}) => {
+const ReactSim = ({config, texturePack, display, playing}) => {
   const ref = useRef(null as any)
   const [sim, setSim] = useState(null as Sim)
 
@@ -16,10 +13,10 @@ const ReactSim = ({config, texturePack, playing}) => {
     setSim(sim)
 
     const container = ref.current
-    sim.canvas.style.width = config.size * magnify + 'px'
-    sim.canvas.style.height = config.size * magnify + 'px'
+    sim.canvas.style.width = config.size * display.magnify + 'px'
+    sim.canvas.style.height = config.size * display.magnify + 'px'
     container.appendChild(sim.shaderBridge.canvas)
-    sim.display().then(() => sim.cycle())
+    sim.display()
 
     return () => {
       sim.destroy()
@@ -29,8 +26,8 @@ const ReactSim = ({config, texturePack, playing}) => {
 
   useEffect(() => {
     if (!sim) return
-    sim.canvas.style.width = config.size * magnify + 'px'
-    sim.canvas.style.height = config.size * magnify + 'px'
+    sim.canvas.style.width = config.size * display.magnify + 'px'
+    sim.canvas.style.height = config.size * display.magnify + 'px'
     Object.assign(sim.config, config)
     sim.display()
   }, [config]) // eslint-disable-line
@@ -40,7 +37,7 @@ const ReactSim = ({config, texturePack, playing}) => {
       if (!playing || !sim) return
       await sim.cycle()
     },
-    playing ? 1000 / frameRate : 0
+    playing ? 1000 / display.frameRate : 0
   )
 
   return (
@@ -48,7 +45,7 @@ const ReactSim = ({config, texturePack, playing}) => {
       ref={ref}
       style={{
         display: 'inline-block',
-        width: config.size * magnify,
+        width: config.size * display.magnify,
       }}
     ></div>
   )

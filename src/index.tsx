@@ -2,10 +2,7 @@ import './index.css'
 import React, {useEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
 import ReactSim from './ReactSim'
-import {config as defaultConfig} from './shaders2/common'
-import main from './shaders2/_referenceImplementation'
-
-main()
+import {config as defaultConfig, texturePack, display} from './shaders2/config'
 
 const stringifyConfig = (config) => {
   return JSON.stringify(config, null, 2)
@@ -14,42 +11,6 @@ const stringifyConfig = (config) => {
 const parseConfig = (configString) => {
   return JSON.parse(configString)
 }
-
-const PI2 = Math.PI * 2
-const texturePack = [
-  {
-    energy: (x, y, size) => Math.random(),
-    direction: (x, y, size) => Math.random() * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-  {
-    energy: (x, y, size) => 0,
-    direction: (x, y, size) => 0 * PI2,
-  },
-]
 
 const App = () => {
   const [playing, setPlaying] = useState(false)
@@ -98,7 +59,7 @@ const App = () => {
             margin: '0 20px',
           }}
         >
-          {/* <textarea
+          <textarea
             onChange={(e) => setConfigText(e.target.value)}
             onBlur={() => {
               try {
@@ -113,9 +74,14 @@ const App = () => {
               outline: 'none',
               border: error ? '10px solid red' : '10px solid transparent',
             }}
-          /> */}
+          />
         </div>
-        <ReactSim config={config} texturePack={texturePack} playing={playing} />
+        <ReactSim
+          config={config}
+          texturePack={texturePack}
+          display={display}
+          playing={playing}
+        />
       </div>
     </div>
   )

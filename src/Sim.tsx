@@ -86,20 +86,20 @@ export default class Sim {
       ],
       ['s01', 's23', 's45', 's67']
     );
-    const substanceReact = substanceReactGenerator(this.config)
-    await sim.compute(
-      substanceReact,
-      ['s01', 's23', 'a0123', 'a4567', 's45', 's67'],
-      ['s01', 's23', 'a0123', 'a4567', 's45', 's67']
-    )
-    await sim.compute(addressPrepare, ['a0123', 'a4567'], ['ap0123', 'ap4567'])
-    await sim.reduce('ap0123', 'at0123')
-    await sim.reduce('ap4567', 'at4567')
-    await sim.compute(
-      addressRun,
-      ['a0123', 'a4567', 'at0123', 'at4567'],
-      ['a0123', 'a4567']
-    )
+    // const substanceReact = substanceReactGenerator(this.config)
+    // await sim.compute(
+    //   substanceReact,
+    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67'],
+    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67']
+    // )
+    // await sim.compute(addressPrepare, ['a0123', 'a4567'], ['ap0123', 'ap4567'])
+    // await sim.reduce('ap0123', 'at0123')
+    // await sim.reduce('ap4567', 'at4567')
+    // await sim.compute(
+    //   addressRun,
+    //   ['a0123', 'a4567', 'at0123', 'at4567'],
+    //   ['a0123', 'a4567']
+    // )
     // prettier-ignore
     await sim.display(display, [
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
@@ -110,10 +110,10 @@ export default class Sim {
     const sim = this.shaderBridge
     sim.uniforms = configToUniforms(this.config)
     // prettier-ignore
-    // await sim.display(display, [
-    //   's01FWTFS', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
-    //   's45', 's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
-    // ])
+    await sim.display(display, [
+      's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
+      's45', 's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
+    ])
   }
   destroy() {
     this.shaderBridge.destroy()

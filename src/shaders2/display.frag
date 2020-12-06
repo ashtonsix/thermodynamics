@@ -70,8 +70,8 @@ float sum(in vec4 x) {
 }
 
 float flatten(in float x) {
-  float brightness = -1.0;
-  float contrast = 2.0;
+  float brightness = 0.0;
+  float contrast = 2000000000000.0;
   float zeroPoint = 0.5;
   return zeroPoint / (zeroPoint + pow(2.0, -((x + brightness) * contrast)));
 }
@@ -88,6 +88,19 @@ vec3 hsl2rgb(in vec3 c) {
     1.0
   );
   return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
+}
+
+vec4 colorScale(in float x) {
+  return vec4(
+    hsl2rgb(
+      mix(
+        vec3(1.6, 1., 0.),
+        vec3( .8, 1., 1.),
+        x
+      )
+    ),
+    1.
+  );
 }
 
 void main() {
@@ -108,5 +121,5 @@ void main() {
     sum(vec4(length(s0), length(s1), length(s2), length(s3))) +
     sum(vec4(length(s4), length(s5), length(s6), length(s7)));
 
-  fragColor = vec4(hsl2rgb(vec3(0.0, 0.0, flatten(e))), 1.0);
+  fragColor = colorScale(flatten(e));
 }
