@@ -3,6 +3,9 @@ import React, {useEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
 import ReactSim from './ReactSim'
 import {config as defaultConfig} from './shaders2/common'
+import main from './shaders2/_referenceImplementation'
+
+main()
 
 const stringifyConfig = (config) => {
   return JSON.stringify(config, null, 2)
@@ -15,18 +18,37 @@ const parseConfig = (configString) => {
 const PI2 = Math.PI * 2
 const texturePack = [
   {
-    energy: (x, y, size) => {
-      return Math.random()
-    },
-    direction: (x, y, size) => 0,
+    energy: (x, y, size) => Math.random(),
+    direction: (x, y, size) => Math.random() * PI2,
   },
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
-  {energy: (x, y, size) => 0, direction: (x, y, size) => Math.random() * PI2},
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
+  {
+    energy: (x, y, size) => 0,
+    direction: (x, y, size) => 0 * PI2,
+  },
 ]
 
 const App = () => {
@@ -76,7 +98,7 @@ const App = () => {
             margin: '0 20px',
           }}
         >
-          <textarea
+          {/* <textarea
             onChange={(e) => setConfigText(e.target.value)}
             onBlur={() => {
               try {
@@ -87,11 +109,11 @@ const App = () => {
             style={{
               marginTop: '20px',
               width: 'calc(100% - 30px)',
-              height: '300px',
+              height: '900px',
               outline: 'none',
               border: error ? '10px solid red' : '10px solid transparent',
             }}
-          />
+          /> */}
         </div>
         <ReactSim config={config} texturePack={texturePack} playing={playing} />
       </div>

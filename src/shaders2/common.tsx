@@ -1,17 +1,16 @@
 // prettier-ignore
 export const config = {
   seed: -1,
-  size: 40,
+  size: 200,
   transferRadius: 1,
   substances: [
-    {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'B', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'C', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'D', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'E', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'F', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'G', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'A', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'B', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'C', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'D', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'E', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'F', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {symbol: 'G', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
   ],
   substanceAttractionMatrix: {
     '00': 1, '01': 1, '02': 1, '03': 1, '04': 1, '05': 1, '06': 1, '07': 1,
@@ -25,16 +24,22 @@ export const config = {
   },
   reactionParameters: {},
   reactions: [
-    "A + B -> 2C, 0.12",
-    "B + C -> 2A, 0.10",
-    "C + A -> 2B, 0.10",
+    // "A + B -> 2C, 0.12",
+    // "B + C -> 2A, 0.10",
+    // "C + A -> 2B, 0.10",
   ],
 }
 
 export function configToUniforms(config) {
+  const substances = config.substances.slice();
+  if (substances.length >= 4) {
+    // prettier-ignore
+    const s_ =  {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0}
+    substances.splice(3, 0, s_);
+  }
   const substanceAttribute = (offset, key) => {
     const a = new Array(4).fill(0);
-    config.substances.slice(offset * 4, 4 + offset * 4).forEach((s, i) => {
+    substances.slice(offset * 4, 4 + offset * 4).forEach((s, i) => {
       a[i] = s[key];
     });
     return a;
@@ -71,6 +76,10 @@ export function configToUniforms(config) {
 }
 
 export function generateTextures(generators, size) {
+  generators = generators.slice();
+  if (generators.length >= 4) {
+    generators.splice(3, 0, {energy: () => 0.0, direction: () => 0.0});
+  }
   let textures = {};
   for (let i = 0; i < generators.length; i += 2) {
     let texture = new Array(size).fill(null).map((_, y) =>

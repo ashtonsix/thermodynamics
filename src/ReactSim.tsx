@@ -4,13 +4,12 @@ import React, {useRef, useEffect, useState} from 'react'
 import Sim from './Sim'
 import useInterval from './useInterval'
 
-const frameRate = 5
-const magnify = 20
+const frameRate = 10
+const magnify = 4
 
 const ReactSim = ({config, texturePack, playing}) => {
   const ref = useRef(null as any)
   const [sim, setSim] = useState(null as Sim)
-  ;(window as any).sim = sim
 
   useEffect(() => {
     const sim = new Sim(config, texturePack)
@@ -20,7 +19,7 @@ const ReactSim = ({config, texturePack, playing}) => {
     sim.canvas.style.width = config.size * magnify + 'px'
     sim.canvas.style.height = config.size * magnify + 'px'
     container.appendChild(sim.shaderBridge.canvas)
-    sim.display()
+    sim.display().then(() => sim.cycle())
 
     return () => {
       sim.destroy()
