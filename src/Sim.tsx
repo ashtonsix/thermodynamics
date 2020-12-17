@@ -6,8 +6,9 @@ import {
   generateTextures,
   substanceReactParse,
 } from './shaders2/common'
+import jsonStringify from 'json-stable-stringify'
 
-const doInserts = (str, inserts) => {
+const compile = (str, inserts, optimised) => {
   str = str.replace(
     /\/\*\s*insert:(\w+)(?:.|\n)*?\*\//gm,
     (match, key) => inserts[key] || match
@@ -16,21 +17,22 @@ const doInserts = (str, inserts) => {
     /\/\*\s*insert-start:(\w+)(?:.|\n)*?insert-end(?:.|\n)*?\*\//gm,
     (match, key) => inserts[key] || match
   )
+  if (!optimised) {
+    str = str.replace(/\/\*8\s*/g, '')
+    str = str.replace(/\s*8\*\//g, '')
+  }
   return str
 }
 
-const copyPaste = doInserts(cycle, {main: 'copyPaste();'})
-const compactLength = doInserts(cycle, {main: 'compactLength();'})
-const transferPrepare = doInserts(cycle, {main: 'transferPrepare();'})
-const transferRun = doInserts(cycle, {main: 'transferRun();'})
-const addressPrepare = doInserts(cycle, {main: 'addressPrepare();'})
-const addressRun = doInserts(cycle, {main: 'addressRun();'})
-
-function substanceReactGenerator(config) {
+function substanceReactGenerator(config, optimised) {
   const parsed = substanceReactParse(config)
 
   if (parsed.length === 0) {
-    return doInserts(cycle, {main: 'substanceReact();', reactionCount: 0})
+    return compile(
+      cycle,
+      {main: 'substanceReact();', reactionCount: 0},
+      optimised
+    )
   }
 
   const reactions = parsed
@@ -47,30 +49,64 @@ function substanceReactGenerator(config) {
 
   const reactionWeights = parsed.map(({weight}) => weight).join(', ')
 
-  return doInserts(cycle, {
-    main: 'substanceReact();',
-    reactions,
-    reactionWeights,
-    reactionCount: reactions.length,
-  })
+  return compile(
+    cycle,
+    {
+      main: 'substanceReact();',
+      reactions,
+      reactionWeights,
+      reactionCount: parsed.length,
+    },
+    optimised
+  )
+}
+
+const optimised = {
+  copyPaste: compile(cycle, {main: 'copyPaste();'}, true),
+  compactLength: compile(cycle, {main: 'compactLength();'}, true),
+  transferPrepare: compile(cycle, {main: 'transferPrepare();'}, true),
+  transferRun: compile(cycle, {main: 'transferRun();'}, true),
+  addressPrepare: compile(cycle, {main: 'addressPrepare();'}, true),
+  addressRun: compile(cycle, {main: 'addressRun();'}, true),
+  substanceReactGenerator: (config) => substanceReactGenerator(config, true),
+}
+
+const regular = {
+  copyPaste: compile(cycle, {main: 'copyPaste();'}, false),
+  compactLength: compile(cycle, {main: 'compactLength();'}, false),
+  transferPrepare: compile(cycle, {main: 'transferPrepare();'}, false),
+  transferRun: compile(cycle, {main: 'transferRun();'}, false),
+  addressPrepare: compile(cycle, {main: 'addressPrepare();'}, false),
+  addressRun: compile(cycle, {main: 'addressRun();'}, false),
+  substanceReactGenerator: (config) => substanceReactGenerator(config, false),
 }
 
 export default class Sim {
   config = null
+  uniformsKey = null
   shaderBridge: ShaderBridge = null
   canvas: HTMLCanvasElement = null
+  updateShaderBridgeConfig() {
+    const uniforms = configToUniforms(this.config)
+    const uniformsKey = jsonStringify(uniforms)
+    if (this.uniformsKey !== uniformsKey) {
+      this.uniformsKey = uniformsKey
+      this.shaderBridge.setUniforms(uniforms)
+    }
+  }
   async cycle() {
     const sim = this.shaderBridge
-    sim.uniforms = configToUniforms(this.config)
-    await sim.compute(copyPaste, ['s01'], ['s01'])
-    await sim.compute(copyPaste, ['s23'], ['s23Prev'])
-    await sim.compute(copyPaste, ['s45'], ['s45Prev'])
-    await sim.compute(copyPaste, ['s67'], ['s67Prev'])
-    await sim.compute(compactLength, ['s01', 's23'], ['s0123Len'])
-    await sim.compute(compactLength, ['s45', 's67'], ['s4567Len'])
+    this.updateShaderBridgeConfig()
+    const p = this.config.substances.length > 3 ? regular : optimised
+    await sim.compute(p.copyPaste, ['s01'], ['s01'])
+    await sim.compute(p.copyPaste, ['s23'], ['s23Prev'])
+    await sim.compute(p.copyPaste, ['s45'], ['s45Prev'])
+    await sim.compute(p.copyPaste, ['s67'], ['s67Prev'])
+    await sim.compute(p.compactLength, ['s01', 's23'], ['s0123Len'])
+    await sim.compute(p.compactLength, ['s45', 's67'], ['s4567Len'])
     // prettier-ignore
     await sim.compute(
-      transferPrepare,
+      p.transferPrepare,
       ['s01', 's23', 's0123Len', 's45', 's67', 's4567Len'],
       [
         's01FWTFS', 's2_FWTFS', 's01Given', 's23Given',
@@ -79,27 +115,30 @@ export default class Sim {
     );
     // prettier-ignore
     await sim.compute(
-      transferRun,
+      p.transferRun,
       [
         's01', 's23', 's01FWTFS', 's2_FWTFS', 's01Given', 's23Given',
         's45', 's67', 's45FWTFS', 's67FWTFS', 's45Given', 's67Given',
       ],
       ['s01', 's23', 's45', 's67']
     );
-    // const substanceReact = substanceReactGenerator(this.config)
-    // await sim.compute(
-    //   substanceReact,
-    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67'],
-    //   ['s01', 's23', 'a0123', 'a4567', 's45', 's67']
-    // )
-    // await sim.compute(addressPrepare, ['a0123', 'a4567'], ['ap0123', 'ap4567'])
-    // await sim.reduce('ap0123', 'at0123')
-    // await sim.reduce('ap4567', 'at4567')
-    // await sim.compute(
-    //   addressRun,
-    //   ['a0123', 'a4567', 'at0123', 'at4567'],
-    //   ['a0123', 'a4567']
-    // )
+    await sim.compute(
+      p.substanceReactGenerator(this.config),
+      ['s01', 's23', 'a0123', 'a4567', 's45', 's67'],
+      ['s01', 's23', 'a0123', 'a4567', 's45', 's67']
+    )
+    await sim.compute(
+      p.addressPrepare,
+      ['a0123', 'a4567'],
+      ['ap0123', 'ap4567']
+    )
+    await sim.reduce('ap0123', 'at0123')
+    await sim.reduce('ap4567', 'at4567')
+    await sim.compute(
+      p.addressRun,
+      ['a0123', 'a4567', 'at0123', 'at4567'],
+      ['a0123', 'a4567']
+    )
     // prettier-ignore
     await sim.display(display, [
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
@@ -108,7 +147,7 @@ export default class Sim {
   }
   async display() {
     const sim = this.shaderBridge
-    sim.uniforms = configToUniforms(this.config)
+    this.updateShaderBridgeConfig()
     // prettier-ignore
     await sim.display(display, [
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
@@ -119,10 +158,11 @@ export default class Sim {
     this.shaderBridge.destroy()
   }
   constructor(config, texturePack) {
-    const textures = generateTextures(texturePack, config.size)
+    const textures = generateTextures(texturePack, config)
     this.config = config
     this.shaderBridge = new ShaderBridge(config.size)
-    this.shaderBridge.setData(textures)
+    console.log(textures)
+    this.shaderBridge.setTextures(textures)
     this.canvas = this.shaderBridge.canvas
   }
 }

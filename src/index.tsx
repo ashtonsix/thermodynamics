@@ -3,6 +3,9 @@ import React, {useEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
 import ReactSim from './ReactSim'
 import {config as defaultConfig, texturePack, display} from './shaders2/config'
+import GravityDemo from './GravityDemo'
+
+console.log(GravityDemo)
 
 const stringifyConfig = (config) => {
   return JSON.stringify(config, null, 2)
@@ -37,6 +40,7 @@ const App = () => {
         color: 'white',
       }}
     >
+      {/* <BabyDemo /> */}
       <br />
       <div style={{padding: '20px'}}>
         <button

@@ -1,53 +1,43 @@
-// prettier-ignore
-export const config = {
-  seed: -1,
-  size: 200,
-  transferRadius: 1,
-  substances: [
-    {symbol: 'A', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'B', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'C', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'D', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'E', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'F', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'G', arc: Math.PI * (2 / 3), arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-  ],
-  substanceAttractionMatrix: {
-    '00': 1, '01': 1, '02': 1, '03': 1, '04': 1, '05': 1, '06': 1, '07': 1,
-    '10': 1, '11': 1, '12': 1, '13': 1, '14': 1, '15': 1, '16': 1, '17': 1,
-    '20': 1, '21': 1, '22': 1, '23': 1, '24': 1, '25': 1, '26': 1, '27': 1,
-    '30': 1, '31': 1, '32': 1, '33': 1, '34': 1, '35': 1, '36': 1, '37': 1,
-    '40': 1, '41': 1, '42': 1, '43': 1, '44': 1, '45': 1, '46': 1, '47': 1,
-    '50': 1, '51': 1, '52': 1, '53': 1, '54': 1, '55': 1, '56': 1, '57': 1,
-    '60': 1, '61': 1, '62': 1, '63': 1, '64': 1, '65': 1, '66': 1, '67': 1,
-    '70': 1, '71': 1, '72': 1, '73': 1, '74': 1, '75': 1, '76': 1, '77': 1,
-  },
-  reactionParameters: {},
-  reactions: [
-    // "A + B -> 2C, 0.12",
-    // "B + C -> 2A, 0.10",
-    // "C + A -> 2B, 0.10",
-  ],
-}
+const defaultSubstance = {
+  symbol: null,
+  arc: null,
+  arcWeight: 1,
+  arcBlending: 0,
+  flo: null,
+  floWeight: 1,
+  floBlending: 0,
+  dirWeight: 1,
+  dirBlending: 0,
+};
 
 export function configToUniforms(config) {
   const substances = config.substances.slice();
   if (substances.length >= 4) {
     // prettier-ignore
-    const s_ =  {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0}
+    const s_ =  {...defaultSubstance}
     substances.splice(3, 0, s_);
   }
   const substanceAttribute = (offset, key) => {
     const a = new Array(4).fill(0);
     substances.slice(offset * 4, 4 + offset * 4).forEach((s, i) => {
-      a[i] = s[key];
+      a[i] = s[key] || defaultSubstance[key] || 0;
+      if (key === 'arc') a[i] *= Math.PI;
     });
     return a;
   };
-  const am = config.substanceAttractionMatrix;
 
   let transferRadius = config.transferRadius;
   if (transferRadius - 0.5 === Math.floor(transferRadius)) transferRadius -= 0.000001;
+
+  const am = new Array(8).fill(null).map(() => new Array(8).fill(1));
+  for (const k in config.substanceAttractionMatrix) {
+    const [a, b] = k.split('2');
+    const v = config.substanceAttractionMatrix[k];
+    const ai = substances.findIndex((s) => s.symbol === a);
+    const bi = substances.findIndex((s) => s.symbol === b);
+    if (ai === -1 || bi === -1) continue;
+    am[ai][bi] = v;
+  }
 
   // prettier-ignore
   const uniforms = {
@@ -61,40 +51,44 @@ export function configToUniforms(config) {
                                     substanceAttribute(1, 'dirWeight'), substanceAttribute(1, 'dirBlending'),
     ],
     substanceAttractionMatrix: [
-      [am['00'],am['01'],am['02'],am['03']], [am['10'],am['11'],am['12'],am['13']],
-      [am['20'],am['21'],am['22'],am['23']], [am['30'],am['31'],am['32'],am['33']],
-      [am['40'],am['41'],am['42'],am['43']], [am['50'],am['51'],am['52'],am['53']],
-      [am['60'],am['61'],am['62'],am['63']], [am['70'],am['71'],am['72'],am['73']],
-      [am['04'],am['05'],am['06'],am['07']], [am['14'],am['15'],am['16'],am['17']],
-      [am['24'],am['25'],am['26'],am['27']], [am['34'],am['35'],am['36'],am['37']],
-      [am['44'],am['45'],am['46'],am['47']], [am['54'],am['55'],am['56'],am['57']],
-      [am['64'],am['65'],am['66'],am['67']], [am['74'],am['75'],am['76'],am['77']],
+      [am[0][0],am[0][1],am[0][2],am[0][3]], [am[1][0],am[1][1],am[1][2],am[1][3]],
+      [am[2][0],am[2][1],am[2][2],am[2][3]], [am[3][0],am[3][1],am[3][2],am[3][3]],
+      [am[4][0],am[4][1],am[4][2],am[4][3]], [am[5][0],am[5][1],am[5][2],am[5][3]],
+      [am[6][0],am[6][1],am[6][2],am[6][3]], [am[7][0],am[7][1],am[7][2],am[7][3]],
+      [am[0][4],am[0][5],am[0][6],am[0][7]], [am[1][4],am[1][5],am[1][6],am[1][7]],
+      [am[2][4],am[2][5],am[2][6],am[2][7]], [am[3][4],am[3][5],am[3][6],am[3][7]],
+      [am[4][4],am[4][5],am[4][6],am[4][7]], [am[5][4],am[5][5],am[5][6],am[5][7]],
+      [am[6][4],am[6][5],am[6][6],am[6][7]], [am[7][4],am[7][5],am[7][6],am[7][7]],
     ],
   }
 
   return uniforms;
 }
 
-export function generateTextures(generators, size) {
-  generators = generators.slice();
-  if (generators.length >= 4) {
-    generators.splice(3, 0, {energy: () => 0.0, direction: () => 0.0});
-  }
+export function generateTextures(generator, config) {
+  let data = new Array(config.size)
+    .fill(null)
+    .map((_, y) => new Array(config.size).fill(null).map((_, x) => generator(x, y, config.size)));
+
+  let textureCount = config.substances.length;
+  if (textureCount >= 4) textureCount += 1;
+
   let textures = {};
-  for (let i = 0; i < generators.length; i += 2) {
-    let texture = new Array(size).fill(null).map((_, y) =>
-      new Array(size).fill(null).map((_, x) => {
-        let e0 = generators[i].energy(x, y, size);
-        let d0 = generators[i].direction(x, y, size);
-        let e1 = 0;
-        let d1 = 0;
-        if (generators[i + 1]) {
-          e1 = generators[i + 1].energy(x, y, size);
-          d1 = generators[i + 1].direction(x, y, size);
-        }
+  // prettier-ignore
+  let indices = [[0, 1], [2, -1], [3, 4], [5, 6]].slice(0, Math.ceil(textureCount / 2));
+  for (let [i, j] of indices) {
+    let texture = new Array(config.size).fill(null).map((_, y) =>
+      new Array(config.size).fill(null).map((_, x) => {
+        const s0 = config.substances[i]?.symbol;
+        const s1 = config.substances[j]?.symbol;
+        let e0 = data[y][x][s0]?.energy || 0;
+        let d0 = data[y][x][s0]?.direction || Math.random() * Math.PI * 2;
+        let e1 = data[y][x][s1]?.energy || 0;
+        let d1 = data[y][x][s1]?.direction || Math.random() * Math.PI * 2;
         return [Math.cos(d0) * e0, Math.sin(d0) * e0, Math.cos(d1) * e1, Math.sin(d1) * e1];
       })
     );
+    if (i >= 3) i++;
     textures[`s${i}${i + 1}`] = texture;
   }
   return textures;
@@ -104,15 +98,16 @@ export function substanceReactParse(config) {
   const reactionStrings = config.reactions;
   const symbols = new Array(8).fill('');
   config.substances.forEach((s, i) => {
+    if (i >= 3) i += 1;
     symbols[i] = s.symbol;
   });
-  symbols.push(...['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']);
-  if (config.substances.includes((s) => /a[0-7]/.test(s.symbol))) {
-    throw new Error('Symbols cannot take the form of a0, a1, a2... they are reserved');
-  }
-  if (Array.from(new Set(symbols)).length < Math.min(config.substances.length + 9, 16)) {
+  if (Array.from(new Set(symbols)).length < config.substances.length + 1) {
     throw new Error('Every symbol must be unique');
   }
+  if (config.substances.includes((s) => /[^A-Z]/.test(s.symbol))) {
+    throw new Error('Symbols can only include capitalised letters');
+  }
+  symbols.push(...['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']);
 
   /**
    * 'A + B -> 2A, 1.0' =>
@@ -156,16 +151,12 @@ export function substanceReactParse(config) {
       const output = new Array(16).fill(0);
       reaction.input.forEach(({quantity, symbol}) => {
         const index = symbols.indexOf(symbol);
-        if (index === -1) {
-          throw new Error(`${symbol} is not a defined symbol`);
-        }
+        if (index === -1) throw new Error(`${symbol} is not a defined symbol`);
         input[index] += quantity;
       });
       reaction.output.forEach(({quantity, symbol}) => {
         const index = symbols.indexOf(symbol);
-        if (index === -1) {
-          throw new Error(`${symbol} is not a defined symbol`);
-        }
+        if (index === -1) throw new Error(`${symbol} is not a defined symbol`);
         output[index] += quantity;
       });
       // TODO: parse weight

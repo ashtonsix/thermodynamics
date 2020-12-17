@@ -1,39 +1,9 @@
 /* eslint-disable no-lone-blocks, no-eval */
 
 import {configToUniforms, generateTextures, substanceReactParse} from './common';
+import {config as defaultConfig, texturePack} from './config';
 
-// prettier-ignore
-const config = {
-  seed: -1,
-  size: 4,
-  transferRadius: 1,
-  substances: [
-    {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'B', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'C', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'D', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'E', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'F', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'G', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flo: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-  ],
-  substanceAttractionMatrix: {
-    '00': 1, '01': 1, '02': 1, '03': 1, '04': 1, '05': 1, '06': 1, '07': 1,
-    '10': 1, '11': 1, '12': 1, '13': 1, '14': 1, '15': 1, '16': 1, '17': 1,
-    '20': 1, '21': 1, '22': 1, '23': 1, '24': 1, '25': 1, '26': 1, '27': 1,
-    '30': 1, '31': 1, '32': 1, '33': 1, '34': 1, '35': 1, '36': 1, '37': 1,
-    '40': 1, '41': 1, '42': 1, '43': 1, '44': 1, '45': 1, '46': 1, '47': 1,
-    '50': 1, '51': 1, '52': 1, '53': 1, '54': 1, '55': 1, '56': 1, '57': 1,
-    '60': 1, '61': 1, '62': 1, '63': 1, '64': 1, '65': 1, '66': 1, '67': 1,
-    '70': 1, '71': 1, '72': 1, '73': 1, '74': 1, '75': 1, '76': 1, '77': 1,
-  },
-  reactionParameters: {},
-  reactions: [
-    "A + B -> 2C, 0.12",
-    "B + C -> 2A, 0.10",
-    "C + A -> 2B, 0.10",
-  ],
-}
+const config = {...defaultConfig, size: 4};
 
 type Texture = Vec4[][];
 type Int = number;
@@ -112,10 +82,10 @@ function len(x: number | Vec2 | Vec4): number {
   if (typeof x === 'number') return x;
   return x.map((x) => x ** 2.0).reduce((pv, v) => pv + v, 0.0) ** 0.5;
 }
-function normalize(x: number): number;
-function normalize(x: Vec2): Vec2;
-function normalize(x: Vec4): Vec4;
-function normalize(x: any): any {
+function normalizeSafe(x: number): number;
+function normalizeSafe(x: Vec2): Vec2;
+function normalizeSafe(x: Vec4): Vec4;
+function normalizeSafe(x: any): any {
   return len(x) ? div(x, len(x)) : vec2(0, 0);
 }
 function texture(tex: Texture, vUV: Vec2): Vec4 {
@@ -275,7 +245,7 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     dot(s012_aLen, uFloWeight012_) + dot(s4567aLen, uFloWeight4567),
     -1.0
   );
-  let avgDir: Vec2 = normalize(
+  let avgDir: Vec2 = normalizeSafe(
     vec2(
       dot(s012_aX, uDirWeight012_) + dot(s4567aX, uDirWeight4567),
       dot(s012_aY, uDirWeight012_) + dot(s4567aY, uDirWeight4567)
@@ -292,14 +262,14 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     avgFlo === -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567);
   s012_aFlo = mul(s012_aFlo, s012_aLen);
   s4567aFlo = mul(s4567aFlo, s4567aLen);
-  s0a = mul(normalize(mix(normalize(s0a), avgDir, uDirBlending012_[0])), s0aLen);
-  s1a = mul(normalize(mix(normalize(s1a), avgDir, uDirBlending012_[1])), s1aLen);
-  s2a = mul(normalize(mix(normalize(s2a), avgDir, uDirBlending012_[2])), s2aLen);
-  s_a = mul(normalize(mix(normalize(s_a), avgDir, uDirBlending012_[3])), s_aLen);
-  s4a = mul(normalize(mix(normalize(s4a), avgDir, uDirBlending4567[0])), s4aLen);
-  s5a = mul(normalize(mix(normalize(s5a), avgDir, uDirBlending4567[1])), s5aLen);
-  s6a = mul(normalize(mix(normalize(s6a), avgDir, uDirBlending4567[2])), s6aLen);
-  s7a = mul(normalize(mix(normalize(s7a), avgDir, uDirBlending4567[3])), s7aLen);
+  s0a = mul(normalizeSafe(mix(normalizeSafe(s0a), avgDir, uDirBlending012_[0])), s0aLen);
+  s1a = mul(normalizeSafe(mix(normalizeSafe(s1a), avgDir, uDirBlending012_[1])), s1aLen);
+  s2a = mul(normalizeSafe(mix(normalizeSafe(s2a), avgDir, uDirBlending012_[2])), s2aLen);
+  s_a = mul(normalizeSafe(mix(normalizeSafe(s_a), avgDir, uDirBlending012_[3])), s_aLen);
+  s4a = mul(normalizeSafe(mix(normalizeSafe(s4a), avgDir, uDirBlending4567[0])), s4aLen);
+  s5a = mul(normalizeSafe(mix(normalizeSafe(s5a), avgDir, uDirBlending4567[1])), s5aLen);
+  s6a = mul(normalizeSafe(mix(normalizeSafe(s6a), avgDir, uDirBlending4567[2])), s6aLen);
+  s7a = mul(normalizeSafe(mix(normalizeSafe(s7a), avgDir, uDirBlending4567[3])), s7aLen);
 
   let s012_Bisector: Vec4 = vec4(
     atan(s0a[1], s0a[0]),
@@ -368,25 +338,29 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     let s4567bLen: Vec4 = texture(textures[5], vvUV); // substance4567b
     s012_bLen[3] = 0.0;
 
-    let s0Attraction: Float = dot(s012_bLen, am0x012_) + dot(s4567bLen, am0x4567);
-    let s1Attraction: Float = dot(s012_bLen, am1x012_) + dot(s4567bLen, am1x4567);
-    let s2Attraction: Float = dot(s012_bLen, am2x012_) + dot(s4567bLen, am2x4567);
-    let s_Attraction: Float = dot(s012_bLen, am_x012_) + dot(s4567bLen, am_x4567);
-    let s4Attraction: Float = dot(s012_bLen, am4x012_) + dot(s4567bLen, am4x4567);
-    let s5Attraction: Float = dot(s012_bLen, am5x012_) + dot(s4567bLen, am5x4567);
-    let s6Attraction: Float = dot(s012_bLen, am6x012_) + dot(s4567bLen, am6x4567);
-    let s7Attraction: Float = dot(s012_bLen, am7x012_) + dot(s4567bLen, am7x4567);
+    let sbLenTotal: Float = sum(s012_bLen) + sum(s4567bLen);
+    let s012_bLenFraction: Vec4 = divSafe(s012_bLen, sbLenTotal, 0.0);
+    let s4567bLenFraction: Vec4 = divSafe(s4567bLen, sbLenTotal, 0.0);
+
+    let s0Attraction: Float = dot(s012_bLenFraction, am0x012_) + dot(s4567bLenFraction, am0x4567);
+    let s1Attraction: Float = dot(s012_bLenFraction, am1x012_) + dot(s4567bLenFraction, am1x4567);
+    let s2Attraction: Float = dot(s012_bLenFraction, am2x012_) + dot(s4567bLenFraction, am2x4567);
+    let s_Attraction: Float = dot(s012_bLenFraction, am_x012_) + dot(s4567bLenFraction, am_x4567);
+    let s4Attraction: Float = dot(s012_bLenFraction, am4x012_) + dot(s4567bLenFraction, am4x4567);
+    let s5Attraction: Float = dot(s012_bLenFraction, am5x012_) + dot(s4567bLenFraction, am5x4567);
+    let s6Attraction: Float = dot(s012_bLenFraction, am6x012_) + dot(s4567bLenFraction, am6x4567);
+    let s7Attraction: Float = dot(s012_bLenFraction, am7x012_) + dot(s4567bLenFraction, am7x4567);
     let sAttractionSum: Float =
       sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) +
       sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
-    s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction / sAttractionSum;
-    s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction / sAttractionSum;
-    s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction / sAttractionSum;
-    s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction / sAttractionSum;
-    s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction / sAttractionSum;
-    s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction / sAttractionSum;
-    s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction / sAttractionSum;
-    s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction / sAttractionSum;
+    s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction;
+    s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction;
+    s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction;
+    s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction;
+    s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction;
+    s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction;
+    s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction;
+    s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction;
 
     let s0TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s012_aLoBound[0], s012_aHiBound[0]), s0Attraction);
     let s1TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s012_aLoBound[1], s012_aHiBound[1]), s1Attraction);
@@ -421,28 +395,28 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   }
 
   // flowWeightedTransferFractionSum
-  let s0FWTFS: Vec2 = mul(normalize(s0a), divSafe(s0TransferFractionSum, s012_aFlo[0], 0.0));
-  let s1FWTFS: Vec2 = mul(normalize(s1a), divSafe(s1TransferFractionSum, s012_aFlo[1], 0.0));
-  let s2FWTFS: Vec2 = mul(normalize(s2a), divSafe(s2TransferFractionSum, s012_aFlo[2], 0.0));
-  let s_FWTFS: Vec2 = mul(normalize(s_a), divSafe(s_TransferFractionSum, s012_aFlo[3], 0.0));
-  let s4FWTFS: Vec2 = mul(normalize(s4a), divSafe(s4TransferFractionSum, s4567aFlo[0], 0.0));
-  let s5FWTFS: Vec2 = mul(normalize(s5a), divSafe(s5TransferFractionSum, s4567aFlo[1], 0.0));
-  let s6FWTFS: Vec2 = mul(normalize(s6a), divSafe(s6TransferFractionSum, s4567aFlo[2], 0.0));
-  let s7FWTFS: Vec2 = mul(normalize(s7a), divSafe(s7TransferFractionSum, s4567aFlo[3], 0.0));
+  let s0FWTFS: Vec2 = mul(normalizeSafe(s0a), divSafe(s0TransferFractionSum, s012_aFlo[0], 0.0));
+  let s1FWTFS: Vec2 = mul(normalizeSafe(s1a), divSafe(s1TransferFractionSum, s012_aFlo[1], 0.0));
+  let s2FWTFS: Vec2 = mul(normalizeSafe(s2a), divSafe(s2TransferFractionSum, s012_aFlo[2], 0.0));
+  let s_FWTFS: Vec2 = mul(normalizeSafe(s_a), divSafe(s_TransferFractionSum, s012_aFlo[3], 0.0));
+  let s4FWTFS: Vec2 = mul(normalizeSafe(s4a), divSafe(s4TransferFractionSum, s4567aFlo[0], 0.0));
+  let s5FWTFS: Vec2 = mul(normalizeSafe(s5a), divSafe(s5TransferFractionSum, s4567aFlo[1], 0.0));
+  let s6FWTFS: Vec2 = mul(normalizeSafe(s6a), divSafe(s6TransferFractionSum, s4567aFlo[2], 0.0));
+  let s7FWTFS: Vec2 = mul(normalizeSafe(s7a), divSafe(s7TransferFractionSum, s4567aFlo[3], 0.0));
 
   let s01FWTFS: Vec4 = vec4(s0FWTFS[0], s0FWTFS[1], s1FWTFS[0], s1FWTFS[1]);
   let s2_FWTFS: Vec4 = vec4(s2FWTFS[0], s2FWTFS[1], s_FWTFS[0], s_FWTFS[1]);
   let s45FWTFS: Vec4 = vec4(s4FWTFS[0], s4FWTFS[1], s5FWTFS[0], s5FWTFS[1]);
   let s67FWTFS: Vec4 = vec4(s6FWTFS[0], s6FWTFS[1], s7FWTFS[0], s7FWTFS[1]);
 
-  let s0Given: Vec2 = mul(normalize(s0GivenDir), s012_aFlo[0]);
-  let s1Given: Vec2 = mul(normalize(s1GivenDir), s012_aFlo[1]);
-  let s2Given: Vec2 = mul(normalize(s2GivenDir), s012_aFlo[2]);
-  let s_Given: Vec2 = mul(normalize(s_GivenDir), s012_aFlo[3]);
-  let s4Given: Vec2 = mul(normalize(s4GivenDir), s4567aFlo[0]);
-  let s5Given: Vec2 = mul(normalize(s5GivenDir), s4567aFlo[1]);
-  let s6Given: Vec2 = mul(normalize(s6GivenDir), s4567aFlo[2]);
-  let s7Given: Vec2 = mul(normalize(s7GivenDir), s4567aFlo[3]);
+  let s0Given: Vec2 = mul(normalizeSafe(s0GivenDir), s012_aFlo[0]);
+  let s1Given: Vec2 = mul(normalizeSafe(s1GivenDir), s012_aFlo[1]);
+  let s2Given: Vec2 = mul(normalizeSafe(s2GivenDir), s012_aFlo[2]);
+  let s_Given: Vec2 = mul(normalizeSafe(s_GivenDir), s012_aFlo[3]);
+  let s4Given: Vec2 = mul(normalizeSafe(s4GivenDir), s4567aFlo[0]);
+  let s5Given: Vec2 = mul(normalizeSafe(s5GivenDir), s4567aFlo[1]);
+  let s6Given: Vec2 = mul(normalizeSafe(s6GivenDir), s4567aFlo[2]);
+  let s7Given: Vec2 = mul(normalizeSafe(s7GivenDir), s4567aFlo[3]);
 
   let s01Given: Vec4 = vec4(s0Given[0], s0Given[1], s1Given[0], s1Given[1]);
   let s2_Given: Vec4 = vec4(s2Given[0], s2Given[1], s_Given[0], s_Given[1]);
@@ -500,25 +474,29 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   let s012_bLen: Vec4 = vec4(s0bLen, s1bLen, s2bLen, s_bLen);
   let s4567bLen: Vec4 = vec4(s4bLen, s5bLen, s6bLen, s7bLen);
 
-  let s0Attraction: Float = dot(s012_bLen, am0x012_) + dot(s4567bLen, am0x4567);
-  let s1Attraction: Float = dot(s012_bLen, am1x012_) + dot(s4567bLen, am1x4567);
-  let s2Attraction: Float = dot(s012_bLen, am2x012_) + dot(s4567bLen, am2x4567);
-  let s_Attraction: Float = dot(s012_bLen, am_x012_) + dot(s4567bLen, am_x4567);
-  let s4Attraction: Float = dot(s012_bLen, am4x012_) + dot(s4567bLen, am4x4567);
-  let s5Attraction: Float = dot(s012_bLen, am5x012_) + dot(s4567bLen, am5x4567);
-  let s6Attraction: Float = dot(s012_bLen, am6x012_) + dot(s4567bLen, am6x4567);
-  let s7Attraction: Float = dot(s012_bLen, am7x012_) + dot(s4567bLen, am7x4567);
+  let sbLenTotal: Float = sum(s012_bLen) + sum(s4567bLen);
+  let s012_bLenFraction: Vec4 = divSafe(s012_bLen, sbLenTotal, 0.0);
+  let s4567bLenFraction: Vec4 = divSafe(s4567bLen, sbLenTotal, 0.0);
+
+  let s0Attraction: Float = dot(s012_bLenFraction, am0x012_) + dot(s4567bLenFraction, am0x4567);
+  let s1Attraction: Float = dot(s012_bLenFraction, am1x012_) + dot(s4567bLenFraction, am1x4567);
+  let s2Attraction: Float = dot(s012_bLenFraction, am2x012_) + dot(s4567bLenFraction, am2x4567);
+  let s_Attraction: Float = dot(s012_bLenFraction, am_x012_) + dot(s4567bLenFraction, am_x4567);
+  let s4Attraction: Float = dot(s012_bLenFraction, am4x012_) + dot(s4567bLenFraction, am4x4567);
+  let s5Attraction: Float = dot(s012_bLenFraction, am5x012_) + dot(s4567bLenFraction, am5x4567);
+  let s6Attraction: Float = dot(s012_bLenFraction, am6x012_) + dot(s4567bLenFraction, am6x4567);
+  let s7Attraction: Float = dot(s012_bLenFraction, am7x012_) + dot(s4567bLenFraction, am7x4567);
   let sAttractionSum: Float =
     sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) +
     sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
-  s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction / sAttractionSum;
-  s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction / sAttractionSum;
-  s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction / sAttractionSum;
-  s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction / sAttractionSum;
-  s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction / sAttractionSum;
-  s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction / sAttractionSum;
-  s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction / sAttractionSum;
-  s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction / sAttractionSum;
+  s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction;
+  s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction;
+  s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction;
+  s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction;
+  s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction;
+  s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction;
+  s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction;
+  s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction;
 
   let s0FloLen: Float = 0.0;
   let s1FloLen: Float = 0.0;
@@ -658,14 +636,14 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   let s6Given: Vec2 = vec2(c67Given[0], c67Given[1]);
   let s7Given: Vec2 = vec2(c67Given[2], c67Given[3]);
 
-  let s0Received: Vec2 = mul(normalize(s0FloDir), s0FloLen);
-  let s1Received: Vec2 = mul(normalize(s1FloDir), s1FloLen);
-  let s2Received: Vec2 = mul(normalize(s2FloDir), s2FloLen);
-  let s_Received: Vec2 = mul(normalize(s_FloDir), s_FloLen);
-  let s4Received: Vec2 = mul(normalize(s4FloDir), s4FloLen);
-  let s5Received: Vec2 = mul(normalize(s5FloDir), s5FloLen);
-  let s6Received: Vec2 = mul(normalize(s6FloDir), s6FloLen);
-  let s7Received: Vec2 = mul(normalize(s7FloDir), s7FloLen);
+  let s0Received: Vec2 = mul(normalizeSafe(s0FloDir), s0FloLen);
+  let s1Received: Vec2 = mul(normalizeSafe(s1FloDir), s1FloLen);
+  let s2Received: Vec2 = mul(normalizeSafe(s2FloDir), s2FloLen);
+  let s_Received: Vec2 = mul(normalizeSafe(s_FloDir), s_FloLen);
+  let s4Received: Vec2 = mul(normalizeSafe(s4FloDir), s4FloLen);
+  let s5Received: Vec2 = mul(normalizeSafe(s5FloDir), s5FloLen);
+  let s6Received: Vec2 = mul(normalizeSafe(s6FloDir), s6FloLen);
+  let s7Received: Vec2 = mul(normalizeSafe(s7FloDir), s7FloLen);
 
   let avgFlo: Float = texture(textures[3], vUV)[3]; // avgArcAndFlo
   let s012_bFlo: Vec4 =
@@ -682,14 +660,14 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   let s6Remaining: Vec2 = mul(s6b, 1.0 - s4567bFlo[2]);
   let s7Remaining: Vec2 = mul(s7b, 1.0 - s4567bFlo[3]);
 
-  let s0: Vec2 = mul(normalize(add(add(s0Given, s0Received), s0Remaining)), len(s0Received) + len(s0Remaining));
-  let s1: Vec2 = mul(normalize(add(add(s1Given, s1Received), s1Remaining)), len(s1Received) + len(s1Remaining));
-  let s2: Vec2 = mul(normalize(add(add(s2Given, s2Received), s2Remaining)), len(s2Received) + len(s2Remaining));
-  let s_: Vec2 = mul(normalize(add(add(s_Given, s_Received), s_Remaining)), len(s_Received) + len(s_Remaining));
-  let s4: Vec2 = mul(normalize(add(add(s4Given, s4Received), s4Remaining)), len(s4Received) + len(s4Remaining));
-  let s5: Vec2 = mul(normalize(add(add(s5Given, s5Received), s5Remaining)), len(s5Received) + len(s5Remaining));
-  let s6: Vec2 = mul(normalize(add(add(s6Given, s6Received), s6Remaining)), len(s6Received) + len(s6Remaining));
-  let s7: Vec2 = mul(normalize(add(add(s7Given, s7Received), s7Remaining)), len(s7Received) + len(s7Remaining));
+  let s0: Vec2 = mul(normalizeSafe(add(add(s0Given, s0Received), s0Remaining)), len(s0Received) + len(s0Remaining));
+  let s1: Vec2 = mul(normalizeSafe(add(add(s1Given, s1Received), s1Remaining)), len(s1Received) + len(s1Remaining));
+  let s2: Vec2 = mul(normalizeSafe(add(add(s2Given, s2Received), s2Remaining)), len(s2Received) + len(s2Remaining));
+  let s_: Vec2 = mul(normalizeSafe(add(add(s_Given, s_Received), s_Remaining)), len(s_Received) + len(s_Remaining));
+  let s4: Vec2 = mul(normalizeSafe(add(add(s4Given, s4Received), s4Remaining)), len(s4Received) + len(s4Remaining));
+  let s5: Vec2 = mul(normalizeSafe(add(add(s5Given, s5Received), s5Remaining)), len(s5Received) + len(s5Remaining));
+  let s6: Vec2 = mul(normalizeSafe(add(add(s6Given, s6Received), s6Remaining)), len(s6Received) + len(s6Remaining));
+  let s7: Vec2 = mul(normalizeSafe(add(add(s7Given, s7Received), s7Remaining)), len(s7Received) + len(s7Remaining));
 
   let s01: Vec4 = vec4(s0[0], s0[1], s1[0], s1[1]);
   let s2_: Vec4 = vec4(s2[0], s2[1], s_[0], s_[1]);
@@ -726,6 +704,7 @@ function substanceReactGenerator(config) {
     let cs67: Vec4 = texture(textures[5], vUV); // substance67
     let ca0123: Vec4 = texture(textures[2], vUV); // address0123
     let ca4567: Vec4 = texture(textures[3], vUV); // address4567
+
     let initial0: Vec4 = vec4(
       len(vec2(cs01[0], cs01[1])),
       len(vec2(cs01[2], cs01[3])),
@@ -745,10 +724,35 @@ function substanceReactGenerator(config) {
     let input1: Vec4 = initial1;
     let input2: Vec4 = initial2;
     let input3: Vec4 = initial3;
-    let output0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
-    let output1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let output0x: Vec2 = vec2(0.0, 0.0);
+    let output0y: Vec2 = vec2(0.0, 0.0);
+    let output0z: Vec2 = vec2(0.0, 0.0);
+    let output0w: Vec2 = vec2(0.0, 0.0);
+    let output1x: Vec2 = vec2(0.0, 0.0);
+    let output1y: Vec2 = vec2(0.0, 0.0);
+    let output1z: Vec2 = vec2(0.0, 0.0);
+    let output1w: Vec2 = vec2(0.0, 0.0);
     let output2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
     let output3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+
+    let i0dx: Vec2 = normalizeSafe(vec2(cs01[0], cs01[1]));
+    let i0dy: Vec2 = normalizeSafe(vec2(cs01[2], cs01[3]));
+    let i0dz: Vec2 = normalizeSafe(vec2(cs23[0], cs23[1]));
+    let i0dw: Vec2 = normalizeSafe(vec2(cs23[2], cs23[3]));
+    let i1dx: Vec2 = normalizeSafe(vec2(cs45[0], cs45[1]));
+    let i1dy: Vec2 = normalizeSafe(vec2(cs45[2], cs45[3]));
+    let i1dz: Vec2 = normalizeSafe(vec2(cs67[0], cs67[1]));
+    let i1dw: Vec2 = normalizeSafe(vec2(cs67[2], cs67[3]));
+    let s0123X: Vec4 = vec4(cs01[0], cs01[2], cs23[0], cs23[2]);
+    let s4567X: Vec4 = vec4(cs45[0], cs45[2], cs67[0], cs67[2]);
+    let s0123Y: Vec4 = vec4(cs01[1], cs01[3], cs23[1], cs23[3]);
+    let s4567Y: Vec4 = vec4(cs45[1], cs45[3], cs67[1], cs67[3]);
+    let avgDir: Vec2 = normalizeSafe(
+      vec2(
+        dot(s0123X, uDirWeight0123) + dot(s4567X, uDirWeight4567),
+        dot(s0123Y, uDirWeight0123) + dot(s4567Y, uDirWeight4567)
+      )
+    );
 
     const rWeights = reactions.map((r) => eval(r.weight));
 
@@ -757,8 +761,14 @@ function substanceReactGenerator(config) {
       let i1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
       let i2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
       let i3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
-      let o0: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
-      let o1: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
+      let o0x: Vec2 = vec2(0.0, 0.0);
+      let o0y: Vec2 = vec2(0.0, 0.0);
+      let o0z: Vec2 = vec2(0.0, 0.0);
+      let o0w: Vec2 = vec2(0.0, 0.0);
+      let o1x: Vec2 = vec2(0.0, 0.0);
+      let o1y: Vec2 = vec2(0.0, 0.0);
+      let o1z: Vec2 = vec2(0.0, 0.0);
+      let o1w: Vec2 = vec2(0.0, 0.0);
       let o2: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
       let o3: Vec4 = vec4(0.0, 0.0, 0.0, 0.0);
 
@@ -780,8 +790,23 @@ function substanceReactGenerator(config) {
           i1 = add(i1, mul(rInput1, reactionSpeed));
           i2 = add(i2, mul(rInput2, reactionSpeed));
           i3 = add(i3, mul(rInput3, reactionSpeed));
-          o0 = add(o0, mul(rOutput0, reactionSpeed));
-          o1 = add(o1, mul(rOutput1, reactionSpeed));
+          // prettier-ignore
+          let direction: Vec2 = normalizeSafe(mix(
+            add(
+              add(add(mul(i0dx, rInput0[0]), mul(i0dy, rInput0[1])), add(mul(i0dz, rInput0[2]), mul(i0dw, rInput0[3]))),
+              add(add(mul(i1dx, rInput1[0]), mul(i1dy, rInput1[1])), add(mul(i1dz, rInput1[2]), mul(i1dw, rInput1[3])))
+            ),
+            avgDir,
+            epsilon
+          ));
+          o0x = add(o0x, mul(rOutput0[0], mul(direction, reactionSpeed)));
+          o0y = add(o0y, mul(rOutput0[1], mul(direction, reactionSpeed)));
+          o0z = add(o0z, mul(rOutput0[2], mul(direction, reactionSpeed)));
+          o0w = add(o0w, mul(rOutput0[3], mul(direction, reactionSpeed)));
+          o1x = add(o1x, mul(rOutput1[0], mul(direction, reactionSpeed)));
+          o1y = add(o1y, mul(rOutput1[1], mul(direction, reactionSpeed)));
+          o1z = add(o1z, mul(rOutput1[2], mul(direction, reactionSpeed)));
+          o1w = add(o1w, mul(rOutput1[3], mul(direction, reactionSpeed)));
           o2 = add(o2, mul(rOutput2, reactionSpeed));
           o3 = add(o3, mul(rOutput3, reactionSpeed));
         }
@@ -798,36 +823,46 @@ function substanceReactGenerator(config) {
       input1 = sub(input1, mul(i1, scaleback));
       input2 = sub(input2, mul(i2, scaleback));
       input3 = sub(input3, mul(i3, scaleback));
-      output0 = add(output0, mul(o0, scaleback));
-      output1 = add(output1, mul(o1, scaleback));
+      output0x = add(output0x, mul(o0x, scaleback));
+      output0y = add(output0y, mul(o0y, scaleback));
+      output0z = add(output0z, mul(o0z, scaleback));
+      output0w = add(output0w, mul(o0w, scaleback));
+      output1x = add(output1x, mul(o1x, scaleback));
+      output1y = add(output1y, mul(o1y, scaleback));
+      output1z = add(output1z, mul(o1z, scaleback));
+      output1w = add(output1w, mul(o1w, scaleback));
       output2 = add(output2, mul(o2, scaleback));
       output3 = add(output3, mul(o3, scaleback));
       if (scaleback === 1.0 || scaleback < epsilon) {
         break;
       }
     }
-    let final0: Vec4 = max(add(input0, output0), 0.0);
-    let final1: Vec4 = max(add(input1, output1), 0.0);
 
-    let s0123X: Vec4 = vec4(cs01[0], cs01[2], cs23[0], cs23[2]);
-    let s4567X: Vec4 = vec4(cs45[0], cs45[2], cs67[0], cs67[2]);
-    let s0123Y: Vec4 = vec4(cs01[1], cs01[3], cs23[1], cs23[3]);
-    let s4567Y: Vec4 = vec4(cs45[1], cs45[3], cs67[1], cs67[3]);
-    let avgDir: Vec2 = normalize(
-      vec2(
-        dot(s0123X, uDirWeight0123) + dot(s4567X, uDirWeight4567),
-        dot(s0123Y, uDirWeight0123) + dot(s4567Y, uDirWeight4567)
-      )
-    );
+    let s0: Vec2 = mul(input0[0], i0dx);
+    let s1: Vec2 = mul(input0[1], i0dy);
+    let s2: Vec2 = mul(input0[2], i0dz);
+    let s3: Vec2 = mul(input0[3], i0dw);
+    let s4: Vec2 = mul(input1[0], i1dx);
+    let s5: Vec2 = mul(input1[1], i1dy);
+    let s6: Vec2 = mul(input1[2], i1dz);
+    let s7: Vec2 = mul(input1[3], i1dw);
+    s0 = mul(normalizeSafe(add(output0x, s0)), len(output0x) + input0[0]);
+    s1 = mul(normalizeSafe(add(output0y, s1)), len(output0y) + input0[1]);
+    s2 = mul(normalizeSafe(add(output0z, s2)), len(output0z) + input0[2]);
+    s3 = mul(normalizeSafe(add(output0w, s3)), len(output0w) + input0[3]);
+    s4 = mul(normalizeSafe(add(output1x, s4)), len(output1x) + input1[0]);
+    s5 = mul(normalizeSafe(add(output1y, s5)), len(output1y) + input1[1]);
+    s6 = mul(normalizeSafe(add(output1z, s6)), len(output1z) + input1[2]);
+    s7 = mul(normalizeSafe(add(output1w, s7)), len(output1w) + input1[3]);
+    if (len(s0) < epsilon) s0 = mul(s0, 0.0);
+    if (len(s1) < epsilon) s1 = mul(s1, 0.0);
+    if (len(s2) < epsilon) s2 = mul(s2, 0.0);
+    if (len(s3) < epsilon) s3 = mul(s3, 0.0);
+    if (len(s4) < epsilon) s4 = mul(s4, 0.0);
+    if (len(s5) < epsilon) s5 = mul(s5, 0.0);
+    if (len(s6) < epsilon) s6 = mul(s6, 0.0);
+    if (len(s7) < epsilon) s7 = mul(s7, 0.0);
 
-    let s0: Vec2 = mul(normalize(mix(avgDir, vec2(cs01[0], cs01[1]), epsilon)), final0[0]);
-    let s1: Vec2 = mul(normalize(mix(avgDir, vec2(cs01[2], cs01[3]), epsilon)), final0[1]);
-    let s2: Vec2 = mul(normalize(mix(avgDir, vec2(cs23[0], cs23[1]), epsilon)), final0[2]);
-    let s3: Vec2 = mul(normalize(mix(avgDir, vec2(cs23[2], cs23[3]), epsilon)), final0[3]);
-    let s4: Vec2 = mul(normalize(mix(avgDir, vec2(cs45[0], cs45[1]), epsilon)), final1[0]);
-    let s5: Vec2 = mul(normalize(mix(avgDir, vec2(cs45[2], cs45[3]), epsilon)), final1[1]);
-    let s6: Vec2 = mul(normalize(mix(avgDir, vec2(cs67[0], cs67[1]), epsilon)), final1[2]);
-    let s7: Vec2 = mul(normalize(mix(avgDir, vec2(cs67[2], cs67[3]), epsilon)), final1[3]);
     let a0: Float = initial2[0] > 0.0 ? max(input2[0], epsilon) : -output2[0];
     let a1: Float = initial2[1] > 0.0 ? max(input2[1], epsilon) : -output2[1];
     let a2: Float = initial2[2] > 0.0 ? max(input2[2], epsilon) : -output2[2];
@@ -993,23 +1028,7 @@ export default function main() {
   const sim = new Sim();
   const uniforms = configToUniforms(config);
 
-  const textures = generateTextures(
-    [
-      {
-        energy: (x, y, size) => {
-          return Math.random();
-        },
-        direction: (x, y, size) => Math.random() * PI2,
-      },
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-      {energy: (x, y, size) => Math.random(), direction: (x, y, size) => Math.random() * PI2},
-    ],
-    config.size
-  );
+  const textures = generateTextures(texturePack, config);
 
   Object.assign(sim.textures, textures);
   sim.size = config.size;

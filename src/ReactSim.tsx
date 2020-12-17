@@ -35,6 +35,9 @@ const ReactSim = ({config, texturePack, display, playing}) => {
   useInterval(
     async () => {
       if (!playing || !sim) return
+      // const u = (Math.sin(performance.now() / 1000) + 1) / 2
+      // sim.config.substances[0].arc = 0.5 + u * 0.3
+
       await sim.cycle()
     },
     playing ? 1000 / display.frameRate : 0

@@ -9,9 +9,9 @@ export default class ShaderBridge {
   pico = null
   programs = {}
   size = null
-  uniforms = {}
   quads = {full: null, reduce1: null, reduce2: null}
   textures = {read: {}, write: {}}
+  uniformBuffers = {}
   async compute(fragShader, texturesIn, texturesOut) {
     await this.draw(fragShader, texturesIn, texturesOut, 'full')
   }
@@ -23,7 +23,7 @@ export default class ShaderBridge {
     await this.draw(reduce2Shader, ['reduce1'], [textureOut], 'reduce2')
   }
   async draw(fragShader, texturesIn, texturesOut, quadName) {
-    const {pico, uniforms, programs} = this
+    const {pico, programs, uniformBuffers} = this
     const quad = this.quads[quadName]
 
     let program
@@ -41,20 +41,9 @@ export default class ShaderBridge {
         this.getTexture(texturesIn[i], 'read', 'full')
       )
     }
-    for (const k in uniforms) {
+    for (const k in uniformBuffers) {
       const blockName = k[0].toUpperCase() + k.slice(1) + 'Uniforms'
-      const data = uniforms[k]
-      const uniformBuffer = pico.createUniformBuffer(
-        data.map((d) =>
-          typeof d === 'number'
-            ? PicoGL.FLOAT
-            : d.length === 2
-            ? PicoGL.FLOAT_VEC2
-            : PicoGL.FLOAT_VEC4
-        )
-      )
-      data.forEach((v, i) => uniformBuffer.set(i, v))
-      uniformBuffer.update()
+      const uniformBuffer = uniformBuffers[k]
       drawCall.uniformBlock(blockName, uniformBuffer)
     }
 
@@ -79,14 +68,40 @@ export default class ShaderBridge {
 
     return drawCall
   }
-  setData(textures) {
+  setTextures(textures) {
     for (const k in textures) {
-      let texture = textures[k]
-      texture = [].concat(...texture)
-      texture = [].concat(...texture)
-      texture = new Float32Array(texture)
-      this.getTexture(k, 'read', 'full').data(texture)
-      this.getTexture(k, 'write', 'full').data(texture)
+      let texture = []
+
+      textures[k].forEach((a) =>
+        a.forEach((b) => b.forEach((c) => texture.push(c)))
+      )
+
+      let data = new Float32Array(texture)
+      this.getTexture(k, 'read', 'full').data(data)
+      this.getTexture(k, 'write', 'full').data(data)
+    }
+  }
+  setUniforms(uniforms) {
+    const {pico, uniformBuffers} = this
+
+    for (const k in uniformBuffers) {
+      uniformBuffers[k].delete()
+      delete uniformBuffers[k]
+    }
+    for (const k in uniforms) {
+      const uniform = uniforms[k]
+      const uniformBuffer = pico.createUniformBuffer(
+        uniform.map((v) =>
+          typeof v === 'number'
+            ? PicoGL.FLOAT
+            : v.length === 2
+            ? PicoGL.FLOAT_VEC2
+            : PicoGL.FLOAT_VEC4
+        )
+      )
+      uniform.forEach((v, i) => uniformBuffer.set(i, v))
+      uniformBuffer.update()
+      uniformBuffers[k] = uniformBuffer
     }
   }
   getQuad(xmin, xmax, ymin, ymax) {

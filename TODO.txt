@@ -30,3 +30,47 @@ dynamic uniforms (display, reactions, etc)
 pipette and draw tools for write kernel
 improved effciency for simulations using less than 4 substances
 sliders for overall concentration of substances
+
+
+Display:
+
+{
+  blending: 'linear' | 'sigmoid' | 'logarithmic' | 'softmax' | 'overlay',
+  channels: [
+    {
+      substance: 'A',
+      quantity: 'energy' | 'direction' | 'similarityToNeighbours' | 'similarityToNeighboursDirectionOnly'
+      active: true,
+      lo: {
+        hue: 0,
+        saturation: 0,
+        luminosity: 0,
+      },
+      hi: {
+        hue: 0,
+        saturation: 0,
+        luminosity: 0,
+      },
+      brightness: 0,
+      contrast: 1,
+    }
+  ]
+}
+
+energy
+direction
+change in energy
+similarity to neighbours (direction only)
+similarity to neighbours (direction and energy)
+
+one-hot: all substances are grey, besides one which is saturated
+distinct: any blend of two substances converges to grey w/ softmax
+
+
+stained glass
+gradient (hue)
+gradient (duotone)
+gradient (greyscale)
+
+ (hue)
+gradient ()

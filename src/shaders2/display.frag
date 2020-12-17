@@ -69,25 +69,46 @@ float sum(in vec4 x) {
   return dot(x, sumVec);
 }
 
-float flatten(in float x) {
-  float brightness = 0.0;
-  float contrast = 2000000000000.0;
+float brightness = -1.0;
+float contrast = 3.0;
+
+float sigmoid(in float x) {
+  x = (x + brightness) * contrast;
   float zeroPoint = 0.5;
-  return zeroPoint / (zeroPoint + pow(2.0, -((x + brightness) * contrast)));
+  return zeroPoint / (zeroPoint + pow(2.0, -x));
+}
+
+float halfSigmoid(in float x) {
+  x = (x + brightness) * contrast;
+  return max(2.0 / (1.0 + pow(2.0, -x)) - 1.0, 0.0);
+}
+
+float linear(in float x) {
+  x = (x + brightness) * contrast;
+  return max(x, 0.0);
+}
+
+vec4 overlay(in vec4 a, in vec4 b) {
+  return vec4(mix(b.xyz, a.xyz, a.w), 1.0 - (1.0 - a.w) * (1.0 - b.w));
+}
+
+vec3 duotone(in vec3 a, in vec3 b, in float m) {
+  vec3 grey = vec3(0.5, 0.5, 0.5);
+  return m < 0.5 ? mix(b, grey, m * 2.0) : mix(grey, a, m * 2.0 - 1.0);
 }
 
 vec3 hsl2rgb(in vec3 c) {
-  vec3 rgb = clamp(
-    abs(
-      mod(
-        c.x * 6.0 + vec3(0.0, 4.0, 2.0),
-        6.0
-      ) - 3.0
-    ) - 1.0,
-    0.0,
-    1.0
-  );
-  return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
+    vec3 rgb = clamp(
+      abs(
+        mod(
+          c.x * 6. + vec3(0., 4., 2.),
+          6.
+        ) - 3.
+      ) - 1.,
+      0.,
+      1.
+    );
+    return c.z + c.y * (rgb - .5) * (1. - abs(2. * c.z - 1.));
 }
 
 vec4 colorScale(in float x) {
@@ -106,20 +127,38 @@ vec4 colorScale(in float x) {
 void main() {
   vec4 c01 = texture(texture0, vUV); // substance01
   vec4 c23 = texture(texture1, vUV); // substance23
-  vec4 c45 = texture(texture3, vUV); // substance45
-  vec4 c67 = texture(texture4, vUV); // substance67
+  vec4 a0123 = texture(texture6, vUV); // address0123
+  vec4 c45 = texture(texture8, vUV); // substance45
+  vec4 c67 = texture(texture9, vUV); // substance67
   vec2 s0 = vec2(c01.x, c01.y);
   vec2 s1 = vec2(c01.z, c01.w);
   vec2 s2 = vec2(c23.x, c23.y);
-  vec2 s3 = vec2(c23.z, c23.w);
   vec2 s4 = vec2(c45.x, c45.y);
   vec2 s5 = vec2(c45.z, c45.w);
   vec2 s6 = vec2(c67.x, c67.y);
   vec2 s7 = vec2(c67.z, c67.w);
 
-  float e =
-    sum(vec4(length(s0), length(s1), length(s2), length(s3))) +
-    sum(vec4(length(s4), length(s5), length(s6), length(s7)));
+  if (length(s2) > 0.0) {
+    fragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    return;
+  }
 
-  fragColor = colorScale(flatten(e));
+  // vec4 f0 = vec4(hsl2rgb(vec3(0.000, 1.0, 0.5)), softClamp(length(s0)));
+  // vec4 f1 = vec4(hsl2rgb(vec3(0.166, 1.0, 0.5)), softClamp(length(s1)));
+  // vec4 f2 = vec4(hsl2rgb(vec3(0.333, 1.0, 0.5)), softClamp(length(s2)));
+  // vec4 f4 = vec4(hsl2rgb(vec3(0.500, 1.0, 0.5)), softClamp(length(s4)));
+  // vec4 f5 = vec4(hsl2rgb(vec3(0.666, 1.0, 0.5)), softClamp(length(s5)));
+  // vec4 f6 = vec4(hsl2rgb(vec3(0.833, 1.0, 0.5)), softClamp(length(s6)));
+
+  fragColor = vec4(duotone(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), length(s0)), 1.0);
+  // fragColor = colorScale(sigmoid(length(s0)));
+
+  // fragColor = overlay(overlay(overlay(overlay(overlay(overlay(f0, f1), f2), f4), f5), f6), vec4(0.0, 0.0, 0.0, 1.0));
+  // fragColor = colorScale(flatten(length(s0)));
+
+  // float e =
+  //   sum(vec4(length(s0), length(s1), length(s2), length(s3))) +
+  //   sum(vec4(length(s4), length(s5), length(s6), length(s7)));
+
+  // fragColor = colorScale(flatten(e));
 }
