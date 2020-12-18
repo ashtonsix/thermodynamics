@@ -1,11 +1,7 @@
 import ShaderBridge from './ShaderBridge'
-import cycle from './shaders2/cycle.frag'
-import display from './shaders2/display.frag'
-import {
-  configToUniforms,
-  generateTextures,
-  substanceReactParse,
-} from './shaders2/common'
+import cycle from './shaders/cycle.frag'
+import display from './shaders/display.frag'
+import {configToUniforms, generateTextures, substanceReactParse} from './common'
 import jsonStringify from 'json-stable-stringify'
 
 const compile = (str, inserts, optimised) => {

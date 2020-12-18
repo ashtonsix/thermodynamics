@@ -8,35 +8,36 @@ const defaultSubstance = {
   floBlending: 0,
   dirWeight: 1,
   dirBlending: 0,
-};
+}
 
 export function configToUniforms(config) {
-  const substances = config.substances.slice();
+  const substances = config.substances.slice()
   if (substances.length >= 4) {
     // prettier-ignore
     const s_ =  {...defaultSubstance}
-    substances.splice(3, 0, s_);
+    substances.splice(3, 0, s_)
   }
   const substanceAttribute = (offset, key) => {
-    const a = new Array(4).fill(0);
+    const a = new Array(4).fill(0)
     substances.slice(offset * 4, 4 + offset * 4).forEach((s, i) => {
-      a[i] = s[key] || defaultSubstance[key] || 0;
-      if (key === 'arc') a[i] *= Math.PI;
-    });
-    return a;
-  };
+      a[i] = s[key] || defaultSubstance[key] || 0
+      if (key === 'arc') a[i] *= Math.PI
+    })
+    return a
+  }
 
-  let transferRadius = config.transferRadius;
-  if (transferRadius - 0.5 === Math.floor(transferRadius)) transferRadius -= 0.000001;
+  let transferRadius = config.transferRadius
+  if (transferRadius - 0.5 === Math.floor(transferRadius))
+    transferRadius -= 0.000001
 
-  const am = new Array(8).fill(null).map(() => new Array(8).fill(1));
+  const am = new Array(8).fill(null).map(() => new Array(8).fill(1))
   for (const k in config.substanceAttractionMatrix) {
-    const [a, b] = k.split('2');
-    const v = config.substanceAttractionMatrix[k];
-    const ai = substances.findIndex((s) => s.symbol === a);
-    const bi = substances.findIndex((s) => s.symbol === b);
-    if (ai === -1 || bi === -1) continue;
-    am[ai][bi] = v;
+    const [a, b] = k.split('2')
+    const v = config.substanceAttractionMatrix[k]
+    const ai = substances.findIndex((s) => s.symbol === a)
+    const bi = substances.findIndex((s) => s.symbol === b)
+    if (ai === -1 || bi === -1) continue
+    am[ai][bi] = v
   }
 
   // prettier-ignore
@@ -62,52 +63,61 @@ export function configToUniforms(config) {
     ],
   }
 
-  return uniforms;
+  return uniforms
 }
 
 export function generateTextures(generator, config) {
   let data = new Array(config.size)
     .fill(null)
-    .map((_, y) => new Array(config.size).fill(null).map((_, x) => generator(x, y, config.size)));
+    .map((_, y) =>
+      new Array(config.size)
+        .fill(null)
+        .map((_, x) => generator(x, y, config.size))
+    )
 
-  let textureCount = config.substances.length;
-  if (textureCount >= 4) textureCount += 1;
+  let textureCount = config.substances.length
+  if (textureCount >= 4) textureCount += 1
 
-  let textures = {};
+  let textures = {}
   // prettier-ignore
   let indices = [[0, 1], [2, -1], [3, 4], [5, 6]].slice(0, Math.ceil(textureCount / 2));
   for (let [i, j] of indices) {
     let texture = new Array(config.size).fill(null).map((_, y) =>
       new Array(config.size).fill(null).map((_, x) => {
-        const s0 = config.substances[i]?.symbol;
-        const s1 = config.substances[j]?.symbol;
-        let e0 = data[y][x][s0]?.energy || 0;
-        let d0 = data[y][x][s0]?.direction || Math.random() * Math.PI * 2;
-        let e1 = data[y][x][s1]?.energy || 0;
-        let d1 = data[y][x][s1]?.direction || Math.random() * Math.PI * 2;
-        return [Math.cos(d0) * e0, Math.sin(d0) * e0, Math.cos(d1) * e1, Math.sin(d1) * e1];
+        const s0 = config.substances[i]?.symbol
+        const s1 = config.substances[j]?.symbol
+        let e0 = data[y][x][s0]?.energy || 0
+        let d0 = data[y][x][s0]?.direction || Math.random() * Math.PI * 2
+        let e1 = data[y][x][s1]?.energy || 0
+        let d1 = data[y][x][s1]?.direction || Math.random() * Math.PI * 2
+        return [
+          Math.cos(d0) * e0,
+          Math.sin(d0) * e0,
+          Math.cos(d1) * e1,
+          Math.sin(d1) * e1,
+        ]
       })
-    );
-    if (i >= 3) i++;
-    textures[`s${i}${i + 1}`] = texture;
+    )
+    if (i >= 3) i++
+    textures[`s${i}${i + 1}`] = texture
   }
-  return textures;
+  return textures
 }
 
 export function substanceReactParse(config) {
-  const reactionStrings = config.reactions;
-  const symbols = new Array(8).fill('');
+  const reactionStrings = config.reactions
+  const symbols = new Array(8).fill('')
   config.substances.forEach((s, i) => {
-    if (i >= 3) i += 1;
-    symbols[i] = s.symbol;
-  });
+    if (i >= 3) i += 1
+    symbols[i] = s.symbol
+  })
   if (Array.from(new Set(symbols)).length < config.substances.length + 1) {
-    throw new Error('Every symbol must be unique');
+    throw new Error('Every symbol must be unique')
   }
   if (config.substances.includes((s) => /[^A-Z]/.test(s.symbol))) {
-    throw new Error('Symbols can only include capitalised letters');
+    throw new Error('Symbols can only include capitalised letters')
   }
-  symbols.push(...['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']);
+  symbols.push(...['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'])
 
   /**
    * 'A + B -> 2A, 1.0' =>
@@ -117,48 +127,53 @@ export function substanceReactParse(config) {
    */
   const reactions = reactionStrings
     .map((text) => {
-      const [, input, output, weight] = text.match(/(.+)->(.+),(.+)/);
+      const [, input, output, weight] = text.match(/(.+)->(.+),(.+)/)
       const reaction = {
         text,
         input: input.split('+').map((str) => {
-          const [, quantity, symbol] = str.match(/(\d*)([A-Za-z]\w*)/);
-          return {quantity: +(quantity || '1'), symbol};
+          const [, quantity, symbol] = str.match(/(\d*)([A-Za-z]\w*)/)
+          return {quantity: +(quantity || '1'), symbol}
         }),
         output: output.split('+').map((str) => {
-          const [, quantity, symbol] = str.match(/(\d*)([A-Za-z]\w*)/);
-          return {quantity: +(quantity || '1'), symbol};
+          const [, quantity, symbol] = str.match(/(\d*)([A-Za-z]\w*)/)
+          return {quantity: +(quantity || '1'), symbol}
         }),
         weight: weight.trim(),
-      };
-      if (
-        reaction.input.reduce((pv, v) => pv + v.quantity, 0) !== reaction.output.reduce((pv, v) => pv + v.quantity, 0)
-      ) {
-        throw new Error(`Every reaction must be balanced ('${reaction.text}' is not)`);
       }
-      let inputAddresses = {};
+      if (
+        reaction.input.reduce((pv, v) => pv + v.quantity, 0) !==
+        reaction.output.reduce((pv, v) => pv + v.quantity, 0)
+      ) {
+        throw new Error(
+          `Every reaction must be balanced ('${reaction.text}' is not)`
+        )
+      }
+      let inputAddresses = {}
       reaction.input.forEach(({symbol}) => {
-        if (/a[0-7]/.test(symbol)) inputAddresses[symbol] = true;
-      });
+        if (/a[0-7]/.test(symbol)) inputAddresses[symbol] = true
+      })
       reaction.output.forEach(({symbol}) => {
         if (inputAddresses[symbol]) {
-          throw new Error(`An address cannot send energy to itself (${symbol} -> ${symbol})`);
+          throw new Error(
+            `An address cannot send energy to itself (${symbol} -> ${symbol})`
+          )
         }
-      });
-      return reaction;
+      })
+      return reaction
     })
     .map((reaction) => {
-      const input = new Array(16).fill(0);
-      const output = new Array(16).fill(0);
+      const input = new Array(16).fill(0)
+      const output = new Array(16).fill(0)
       reaction.input.forEach(({quantity, symbol}) => {
-        const index = symbols.indexOf(symbol);
-        if (index === -1) throw new Error(`${symbol} is not a defined symbol`);
-        input[index] += quantity;
-      });
+        const index = symbols.indexOf(symbol)
+        if (index === -1) throw new Error(`${symbol} is not a defined symbol`)
+        input[index] += quantity
+      })
       reaction.output.forEach(({quantity, symbol}) => {
-        const index = symbols.indexOf(symbol);
-        if (index === -1) throw new Error(`${symbol} is not a defined symbol`);
-        output[index] += quantity;
-      });
+        const index = symbols.indexOf(symbol)
+        if (index === -1) throw new Error(`${symbol} is not a defined symbol`)
+        output[index] += quantity
+      })
       // TODO: parse weight
       // all symbols in equation must be described elsewhere.
       // weight must simultaneously be a valid JavaScript and GLSL expression which yields a float
@@ -171,7 +186,7 @@ export function substanceReactParse(config) {
         ],
         weight: reaction.weight,
       };
-    });
+    })
 
-  return reactions;
+  return reactions
 }

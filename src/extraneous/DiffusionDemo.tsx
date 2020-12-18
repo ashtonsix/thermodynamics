@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import useInterval from './useInterval'
+import useInterval from '../util/useInterval'
 
 const {PI, sin, cos} = Math
 

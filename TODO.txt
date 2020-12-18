@@ -74,3 +74,66 @@ gradient (greyscale)
 
  (hue)
 gradient ()
+
+
+for gradients: https://learnui.design/tools/data-color-picker.html
+chroma scale mode lch/hcl: https://gka.github.io/chroma.js/#chroma-scale
+hsluv.org/implementations/
+
+gradient (single-substance)
+  addressHomeColour
+  addressMailColour
+  quantity
+  dynamic range
+    accurate (linear)
+    HDR highlights (sigmoid)
+    HDR shadows and highlights (logarithmic)
+  chroma
+    accurate (HPLuv)
+    vivid (HSLuv)
+  interpolation
+    palette
+    divergent
+      tone #1 (colour)
+      tone #2
+      midpoint brightness
+      midpoint saturation
+    monochrome
+      tone #1
+      brightness
+    monochrome (grayscale)
+    hue (full spectrum)
+  substances
+    active
+    transparent
+    name
+    brightness
+    contrast
+softmax (multi-substance)
+  addressHomeColour
+  addressMailColour
+  quantity
+  saturation
+    one hot
+    multi hot
+  substances
+    active
+    hot (select or checkbox, depending on saturation)
+    name
+    hue/alpha (colour swatch)
+    brightness
+    contrast
+custom (basic)
+  quantity
+  argumentNames
+  substances
+    active
+custom (advanced)
+    
+
+quantity
+  energy
+  direction
+  change in energy
+  similarity to neighbours (direction only)
+  similarity to neighbours (direction and energy)

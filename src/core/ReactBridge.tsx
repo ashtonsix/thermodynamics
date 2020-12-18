@@ -1,8 +1,7 @@
-import './index.css'
 import React, {useRef, useEffect, useState} from 'react'
 
 import Sim from './Sim'
-import useInterval from './useInterval'
+import useInterval from '../util/useInterval'
 
 const ReactSim = ({config, texturePack, display, playing}) => {
   const ref = useRef(null as any)

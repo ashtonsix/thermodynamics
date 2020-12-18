@@ -1,7 +1,7 @@
 import {PicoGL} from 'picogl/build/module/picogl'
-import quadShader from './shaders2/quad.vert'
-import reduce1Shader from './shaders2/reduce1.frag'
-import reduce2Shader from './shaders2/reduce2.frag'
+import quadShader from './shaders/quad.vert'
+import reduce1Shader from './shaders/reduce1.frag'
+import reduce2Shader from './shaders/reduce2.frag'
 
 export default class ShaderBridge {
   destroyed = false

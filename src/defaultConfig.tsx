@@ -1,8 +1,8 @@
-import {Noise} from 'noisejs';
+import {Noise} from 'noisejs'
 
-const noise = new Noise(Math.random());
+const noise = new Noise(Math.random())
 
-export const display = {frameRate: 10, magnify: 2};
+export const display = {frameRate: 10, magnify: 2}
 
 // prettier-ignore
 export const config = {
@@ -25,13 +25,13 @@ export const config = {
 }
 
 export const texturePack = (x, y, size) => {
-  const cx = size / 2;
-  const cy = size / 2;
-  const wall = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 >= size / 2 - 5;
+  const cx = size / 2
+  const cy = size / 2
+  const wall = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 >= size / 2 - 5
 
   return {
     A: {energy: Math.random()},
     B: {energy: 0},
     W: {energy: wall ? 0 : 0},
-  };
-};
+  }
+}

@@ -1,7 +1,7 @@
 /* eslint-disable no-lone-blocks, no-eval */
 
-import {configToUniforms, generateTextures, substanceReactParse} from './common';
-import {config as defaultConfig, texturePack} from './config';
+import {configToUniforms, generateTextures, substanceReactParse} from '../common';
+import {config as defaultConfig, texturePack} from '../../defaultConfig';
 
 const config = {...defaultConfig, size: 4};
 
@@ -153,7 +153,6 @@ function getNextBound(bound: Vec4): Vec4 {
 function arcOverlap(loCel: Float, hiCel: Float, loArc: Float, hiArc: Float): Vec2 {
   let length: Float = 0.0;
   let theta: Float = 0.0;
-  // prettier-ignore
   if ((hiCel - loCel) + (hiArc - loArc) >= PI2) {
     length = ((hiCel - loCel) + (hiArc - loArc)) - PI2;
     theta = mod((loArc + hiArc) / 2.0 + PI, PI2);
@@ -190,7 +189,6 @@ function compactLength(vUV: Vec2, uniforms, textures: Texture[]) {
 }
 function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   const [uSize, uTransferRadius] = uniforms.static;
-  // prettier-ignore
   const [
     uArc012_, uArcWeight012_, uArcBlending012_,
     uFlo012_, uFloWeight012_, uFloBlending012_,
@@ -199,7 +197,6 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     uFlo4567, uFloWeight4567, uFloBlending4567,
               uDirWeight4567, uDirBlending4567,
   ] = uniforms.substance;
-  // prettier-ignore
   const [
     am0x012_, am1x012_, am2x012_, am_x012_,
     am4x012_, am5x012_, am6x012_, am7x012_,
@@ -433,7 +430,6 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
 
 function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   const [uSize, uTransferRadius] = uniforms.static;
-  // prettier-ignore
   const [
     uArc012_, /* uArcWeight012_ */, uArcBlending012_,
     uFlo012_, /* uFloWeight012_ */, uFloBlending012_,
@@ -442,7 +438,6 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
     uFlo4567, /* uFloWeight4567 */, uFloBlending4567,
               /* uDirWeight4567 */, /* uDirBlending4567 */,
   ] = uniforms.substance;
-  // prettier-ignore
   const [
     am0x012_, am1x012_, am2x012_, am_x012_,
     am4x012_, am5x012_, am6x012_, am7x012_,
@@ -677,7 +672,6 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   s2_[2] = 0.0;
   s2_[3] = 0.0;
 
-  // prettier-ignore
   return [
     s01,
     s2_,
@@ -689,7 +683,6 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
 function substanceReactGenerator(config) {
   const reactions = substanceReactParse(config);
   function substanceReact(vUV: Vec2, uniforms, textures: Texture[]) {
-    // prettier-ignore
     const [
       /* uArc0123, uArcWeight0123, uArcBlending0123, */
       /* uFlo0123, uFloWeight0123, uFloBlending0123, */
@@ -790,7 +783,6 @@ function substanceReactGenerator(config) {
           i1 = add(i1, mul(rInput1, reactionSpeed));
           i2 = add(i2, mul(rInput2, reactionSpeed));
           i3 = add(i3, mul(rInput3, reactionSpeed));
-          // prettier-ignore
           let direction: Vec2 = normalizeSafe(mix(
             add(
               add(add(mul(i0dx, rInput0[0]), mul(i0dy, rInput0[1])), add(mul(i0dz, rInput0[2]), mul(i0dw, rInput0[3]))),
@@ -974,7 +966,6 @@ function cycle(sim: Sim) {
   sim.compute(copyPaste, ['s67'], ['s67Prev']);
   sim.compute(compactLength, ['s01', 's23'], ['s0123Len']);
   sim.compute(compactLength, ['s45', 's67'], ['s4567Len']);
-  // prettier-ignore
   sim.compute(
     transferPrepare,
     ['s01', 's23', 's0123Len', 's45', 's67', 's4567Len'],
@@ -984,7 +975,6 @@ function cycle(sim: Sim) {
     ]
   );
 
-  // prettier-ignore
   sim.compute(
     transferRun,
     [
