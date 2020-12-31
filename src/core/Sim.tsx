@@ -1,6 +1,7 @@
 import ShaderBridge from './ShaderBridge'
 import cycle from './shaders/cycle.frag'
 import display from './shaders/display.frag'
+import hsluv from './shaders/hsluv.glsl'
 import {configToUniforms, generateTextures, substanceReactParse} from './common'
 import jsonStringify from 'json-stable-stringify'
 
@@ -65,6 +66,7 @@ const optimised = {
   addressPrepare: compile(cycle, {main: 'addressPrepare();'}, true),
   addressRun: compile(cycle, {main: 'addressRun();'}, true),
   substanceReactGenerator: (config) => substanceReactGenerator(config, true),
+  display: compile(display, {hsluv}, true),
 }
 
 const regular = {
@@ -75,6 +77,7 @@ const regular = {
   addressPrepare: compile(cycle, {main: 'addressPrepare();'}, false),
   addressRun: compile(cycle, {main: 'addressRun();'}, false),
   substanceReactGenerator: (config) => substanceReactGenerator(config, false),
+  display: compile(display, {hsluv}, false),
 }
 
 export default class Sim {
@@ -94,7 +97,7 @@ export default class Sim {
     const sim = this.shaderBridge
     this.updateShaderBridgeConfig()
     const p = this.config.substances.length > 3 ? regular : optimised
-    await sim.compute(p.copyPaste, ['s01'], ['s01'])
+    await sim.compute(p.copyPaste, ['s01'], ['s01Prev'])
     await sim.compute(p.copyPaste, ['s23'], ['s23Prev'])
     await sim.compute(p.copyPaste, ['s45'], ['s45Prev'])
     await sim.compute(p.copyPaste, ['s67'], ['s67Prev'])
@@ -136,7 +139,7 @@ export default class Sim {
       ['a0123', 'a4567']
     )
     // prettier-ignore
-    await sim.display(display, [
+    await sim.display(p.display, [
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
       's45', 's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
     ])
@@ -144,8 +147,9 @@ export default class Sim {
   async display() {
     const sim = this.shaderBridge
     this.updateShaderBridgeConfig()
+    const p = this.config.substances.length > 3 ? regular : optimised
     // prettier-ignore
-    await sim.display(display, [
+    await sim.display(p.display, [
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
       's45', 's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
     ])
@@ -157,7 +161,6 @@ export default class Sim {
     const textures = generateTextures(texturePack, config)
     this.config = config
     this.shaderBridge = new ShaderBridge(config.size)
-    console.log(textures)
     this.shaderBridge.setTextures(textures)
     this.canvas = this.shaderBridge.canvas
   }

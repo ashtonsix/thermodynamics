@@ -119,59 +119,83 @@ vec4 getNextBound(in vec4 bound) {
   float ox = 0.0;
   float oy = 0.0;
   float ot = 7.0;
-  if (it < PI && abs(ix - 0.5) < radius) {
+  if ((it < PI && abs(ix - 0.5) < radius) || abs(ix + 0.5) >= radius) {
     float x = ix - 0.5;
     float y = pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
     float t = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix - 1.0;
       oy = iy;
       ot = t;
     }
   }
-  if ((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) {
+  if (((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) || abs(iy - 0.5) >= radius) {
     float y = iy + 0.5;
     float x = pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
     float t = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
       oy = iy + 1.0;
       ot = t;
     }
   }
-  if (it >= PI && abs(ix + 0.5) < radius) {
+  if ((it >= PI && abs(ix + 0.5) < radius) || abs(ix - 0.5) >= radius) {
     float x = ix + 0.5;
     float y = -pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
     float t = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix + 1.0;
       oy = iy;
       ot = t;
     }
   }
-  if (it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) {
+  if ((it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) || abs(iy + 0.5) >= radius) {
     float y = iy - 0.5;
     float x = -pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
     float t = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
       oy = iy - 1.0;
       ot = t;
     }
   }
+  ot = mod(ot, PI2);
   return vec4(ox, oy, ot, radius);
 }
 
 vec2 arcOverlap(in float loCel, in float hiCel, in float loArc, in float hiArc) {
   float length = 0.0;
   float theta = 0.0;
-  if ((hiCel - loCel) + (hiArc - loArc) >= PI2) {
-    length = ((hiCel - loCel) + (hiArc - loArc)) - PI2;
-    theta = mod((loArc + hiArc) / 2.0 + PI, PI2);
+  float arcMidpointOpposite = mod((hiArc + loArc) / 2.0 + PI, PI2);
+  if (
+    (
+      (arcMidpointOpposite > loCel && arcMidpointOpposite < hiCel) ||
+      ((arcMidpointOpposite + PI2) > loCel && (arcMidpointOpposite + PI2) < hiCel)
+    ) &&
+    (hiCel - loCel) + (hiArc - loArc) >= PI2
+  ) {
+    float loGap = hiArc;
+    float hiGap = loArc + PI2;
+    if (loGap >= hiCel) {
+      loGap -= PI2;
+      hiGap -= PI2;
+    }
+    loGap = max(loGap, loCel);
+    hiGap = min(hiGap, hiCel);
+    float midpointA = (loCel + loGap) / 2.0;
+    float midpointB = (hiCel + hiGap) / 2.0;
+    float lengthA = abs(loCel - loGap);
+    float lengthB = abs(hiCel - hiGap);
+    length = (lengthA + lengthB) / (hiArc - loArc);
+    theta = (midpointA * lengthA + midpointB * lengthB) / (lengthA + lengthB);
   } else {
     if (hiArc < loCel) {
       loArc += PI2;
@@ -285,16 +309,16 @@ void transferPrepare() {
   /*8 vec4 s4567aHiBound = mod(((s4567Bisector + s4567aArc) + PI2), PI2); 8*/
 
   s012_aHiBound = vec4(
-    s012_aLoBound.x >= s012_aHiBound.x ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
-    s012_aLoBound.y >= s012_aHiBound.y ? s012_aHiBound.y + PI2 : s012_aHiBound.y,
-    s012_aLoBound.z >= s012_aHiBound.z ? s012_aHiBound.z + PI2 : s012_aHiBound.z,
-    s012_aLoBound.w >= s012_aHiBound.w ? s012_aHiBound.w + PI2 : s012_aHiBound.w
+    s012_aLoBound.x > (s012_aHiBound.x - epsilon) ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
+    s012_aLoBound.y > (s012_aHiBound.y - epsilon) ? s012_aHiBound.y + PI2 : s012_aHiBound.y,
+    s012_aLoBound.z > (s012_aHiBound.z - epsilon) ? s012_aHiBound.z + PI2 : s012_aHiBound.z,
+    s012_aLoBound.w > (s012_aHiBound.w - epsilon) ? s012_aHiBound.w + PI2 : s012_aHiBound.w
   );
   /*8 s4567aHiBound = vec4(
-    s4567aLoBound.x >= s4567aHiBound.x ? s4567aHiBound.x + PI2 : s4567aHiBound.x,
-    s4567aLoBound.y >= s4567aHiBound.y ? s4567aHiBound.y + PI2 : s4567aHiBound.y,
-    s4567aLoBound.z >= s4567aHiBound.z ? s4567aHiBound.z + PI2 : s4567aHiBound.z,
-    s4567aLoBound.w >= s4567aHiBound.w ? s4567aHiBound.w + PI2 : s4567aHiBound.w
+    s4567aLoBound.x > (s4567aHiBound.x - epsilon) ? s4567aHiBound.x + PI2 : s4567aHiBound.x,
+    s4567aLoBound.y > (s4567aHiBound.y - epsilon) ? s4567aHiBound.y + PI2 : s4567aHiBound.y,
+    s4567aLoBound.z > (s4567aHiBound.z - epsilon) ? s4567aHiBound.z + PI2 : s4567aHiBound.z,
+    s4567aLoBound.w > (s4567aHiBound.w - epsilon) ? s4567aHiBound.w + PI2 : s4567aHiBound.w
   ); 8*/
 
   float s0TransferFractionSum = 0.0;
@@ -558,16 +582,16 @@ void transferRun() {
     vec4 s012_aHiBound = mod(((s012_Bisector + s012_aArc) + PI2), PI2);
     /*8 vec4 s4567aHiBound = mod(((s4567Bisector + s4567aArc) + PI2), PI2); 8*/
     s012_aHiBound = vec4(
-      s012_aLoBound.x >= s012_aHiBound.x ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
-      s012_aLoBound.y >= s012_aHiBound.y ? s012_aHiBound.y + PI2 : s012_aHiBound.y,
-      s012_aLoBound.z >= s012_aHiBound.z ? s012_aHiBound.z + PI2 : s012_aHiBound.z,
-      s012_aLoBound.w >= s012_aHiBound.w ? s012_aHiBound.w + PI2 : s012_aHiBound.w
+      s012_aLoBound.x > (s012_aHiBound.x - epsilon) ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
+      s012_aLoBound.y > (s012_aHiBound.y - epsilon) ? s012_aHiBound.y + PI2 : s012_aHiBound.y,
+      s012_aLoBound.z > (s012_aHiBound.z - epsilon) ? s012_aHiBound.z + PI2 : s012_aHiBound.z,
+      s012_aLoBound.w > (s012_aHiBound.w - epsilon) ? s012_aHiBound.w + PI2 : s012_aHiBound.w
     );
     /*8 s4567aHiBound = vec4(
-      s4567aLoBound.x >= s4567aHiBound.x ? s4567aHiBound.x + PI2 : s4567aHiBound.x,
-      s4567aLoBound.y >= s4567aHiBound.y ? s4567aHiBound.y + PI2 : s4567aHiBound.y,
-      s4567aLoBound.z >= s4567aHiBound.z ? s4567aHiBound.z + PI2 : s4567aHiBound.z,
-      s4567aLoBound.w >= s4567aHiBound.w ? s4567aHiBound.w + PI2 : s4567aHiBound.w
+      s4567aLoBound.x > (s4567aHiBound.x - epsilon) ? s4567aHiBound.x + PI2 : s4567aHiBound.x,
+      s4567aLoBound.y > (s4567aHiBound.y - epsilon) ? s4567aHiBound.y + PI2 : s4567aHiBound.y,
+      s4567aLoBound.z > (s4567aHiBound.z - epsilon) ? s4567aHiBound.z + PI2 : s4567aHiBound.z,
+      s4567aLoBound.w > (s4567aHiBound.w - epsilon) ? s4567aHiBound.w + PI2 : s4567aHiBound.w
     ); 8*/
 
     vec2 s0TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.x, s012_aHiBound.x) * s0Attraction);

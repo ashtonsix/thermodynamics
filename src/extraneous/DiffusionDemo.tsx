@@ -36,7 +36,7 @@ const Display = ({state}) => {
 
   const numCells = cellEnergy.length
   const fontSize = [0, 0, 16, 14, 12, 10, 9, 8, 7][numCells]
-  const arrowSize = [0, 0, 6, 6, 5, 4, 3, 2, 2][numCells]
+  const arrowSize = [0, 0, 3, 3, 2.5, 2, 1.5, 1, 1][numCells]
   const gapSize = [0, 0, 0.65, 0.55, 0.4, 0.3, 0.28, 0.24, 0.22][numCells] * PI
   const cellSize = [0, 0, 36, 28, 24, 18, 18, 16, 14][numCells]
 
@@ -59,12 +59,12 @@ const Display = ({state}) => {
     >
       <defs>
         <marker
-          id="arrow"
+          id="arrowHead"
           viewBox="0 0 10 10"
           refX="5"
           refY="5"
-          markerWidth={arrowSize}
-          markerHeight={arrowSize}
+          markerWidth={2.5}
+          markerHeight={2.5}
           orient="auto-start-reverse"
         >
           <path stroke="white" fill="white" d={`M 0 0 L 10 5 L 0 10 z`} />
@@ -82,14 +82,15 @@ const Display = ({state}) => {
             .join(' ')}
           fill="none"
           stroke="white"
+          strokeWidth={arrowSize}
           markerStart={
             flowOrientation[i] === 'RIGHT' || flowOrientation[i] === 'BOTH'
-              ? 'url(#arrow)'
+              ? 'url(#arrowHead)'
               : null
           }
           markerEnd={
             flowOrientation[i] === 'LEFT' || flowOrientation[i] === 'BOTH'
-              ? 'url(#arrow)'
+              ? 'url(#arrowHead)'
               : null
           }
         />
@@ -192,7 +193,7 @@ const cycle = ({cellEnergy, flowOrientation}, flow) => {
   }
 }
 
-const BabyDemo = () => {
+const DiffusionDemo = () => {
   const [playing, setPlaying] = useState(false)
   const [cellNumber, setCellNumber] = useState(2)
   const [flow, setFlow] = useState(0.4)
@@ -209,13 +210,13 @@ const BabyDemo = () => {
 
   return (
     <div style={{padding: '5px 0'}}>
-      <div className="BabyDemo-ControlContainer">
+      <div className="DiffusionDemo-ControlContainer">
         <style>
           {`
-            .BabyDemo-ControlContainer * {
+            .DiffusionDemo-ControlContainer * {
               margin: 0 5px;
             }
-            .BabyDemo-ControlContainer .break {
+            .DiffusionDemo-ControlContainer .break {
               display: block;
               padding-top: 5px;
             }
@@ -325,4 +326,4 @@ const BabyDemo = () => {
   )
 }
 
-export default BabyDemo
+export default DiffusionDemo

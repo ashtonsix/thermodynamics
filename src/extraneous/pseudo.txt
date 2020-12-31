@@ -2,7 +2,7 @@
 
 {
   frame: 0,
-  frameRate: 60,
+  iterationsPerSecond: 60,
 }
 
 ## settings
@@ -14,14 +14,14 @@ json (static) or js (parameters = t/frame)
   size: 100,
   transferRadius: 1,
   substances: [
-    {symbol: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'B', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'C', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'D', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'E', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'F', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'G', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
-    {symbol: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'A', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'B', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'C', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'D', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'E', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'F', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'G', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
+    {name: 'H', arc: 1, arcWeight: 1, arcBlending: 0, flow: 0.5, floWeight: 1, floBlending: 0, dirWeight: 1, dirBlending: 0},
   ],
   substanceAttractionMatrix: {
     00: 1, 01: 1, 02: 1, 03: 1, 04: 1, 05: 1, 06: 1, 07: 1,

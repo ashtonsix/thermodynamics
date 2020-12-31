@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import ReactSim from './core/ReactBridge'
-import {config as defaultConfig, texturePack, display} from './defaultConfig'
+import {config as defaultConfig, texturePack} from './defaultConfig'
+import DisplaySettings from './DisplaySettings'
 
 const stringifyConfig = (config) => {
   return JSON.stringify(config, null, 2)
@@ -29,14 +30,13 @@ const App = () => {
   return (
     <div
       style={{
-        background: '#111',
-        minHeight: '100vh',
-        height: '100%',
-        color: 'white',
+        display: 'grid',
+        gridTemplateAreas: "'header header header' 'left middle right'",
+        gridTemplateColumns: '400px 1fr 400px',
+        gridTemplateRows: 'auto 1fr',
       }}
     >
-      <br />
-      <div style={{padding: '20px'}}>
+      <div style={{gridArea: 'header', padding: '20px'}}>
         <button
           onClick={() => setPlaying(!playing)}
           style={{
@@ -49,36 +49,37 @@ const App = () => {
         >
           {playing ? '⏸' : '▶️'}
         </button>
-        <div
-          style={{
-            display: 'inline-block',
-            verticalAlign: 'top',
-            width: '400px',
-            margin: '0 20px',
+      </div>
+      <div
+        style={{
+          gridArea: 'left',
+        }}
+      >
+        <textarea
+          onChange={(e) => setConfigText(e.target.value)}
+          onBlur={() => {
+            try {
+              setConfigText(stringifyConfig(parseConfig(configText)))
+            } catch (e) {}
           }}
-        >
-          <textarea
-            onChange={(e) => setConfigText(e.target.value)}
-            onBlur={() => {
-              try {
-                setConfigText(stringifyConfig(parseConfig(configText)))
-              } catch (e) {}
-            }}
-            value={configText}
-            style={{
-              marginTop: '20px',
-              width: 'calc(100% - 30px)',
-              height: '900px',
-              outline: 'none',
-              border: error ? '10px solid red' : '10px solid transparent',
-            }}
-          />
-        </div>
-        <ReactSim
-          config={config}
-          texturePack={texturePack}
-          display={display}
-          playing={playing}
+          value={configText}
+          style={{
+            width: '100%',
+            height: '800px',
+            outline: 'none',
+            border: error ? '10px solid red' : '10px solid transparent',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
+      <div style={{gridArea: 'middle', margin: '0 20px'}}>
+        <ReactSim config={config} texturePack={texturePack} playing={playing} />
+      </div>
+      <div style={{gridArea: 'right'}}>
+        <DisplaySettings
+          onChange={(display) => {
+            setConfigText(stringifyConfig({...config, display}))
+          }}
         />
       </div>
     </div>

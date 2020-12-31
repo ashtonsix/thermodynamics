@@ -82,7 +82,7 @@ hsluv.org/implementations/
 
 gradient (single-substance)
   addressHomeColour
-  addressMailColour
+  addressMailboxColour
   quantity
   dynamic range
     accurate (linear)
@@ -111,7 +111,7 @@ gradient (single-substance)
     contrast
 softmax (multi-substance)
   addressHomeColour
-  addressMailColour
+  addressMailboxColour
   quantity
   saturation
     one hot

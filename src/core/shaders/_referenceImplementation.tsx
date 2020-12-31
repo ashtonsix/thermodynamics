@@ -1,9 +1,7 @@
 /* eslint-disable no-lone-blocks, no-eval */
 
 import {configToUniforms, generateTextures, substanceReactParse} from '../common';
-import {config as defaultConfig, texturePack} from '../../defaultConfig';
-
-const config = {...defaultConfig, size: 4};
+import * as defaultConfig from '../../defaultConfig';
 
 type Texture = Vec4[][];
 type Int = number;
@@ -103,59 +101,83 @@ function getNextBound(bound: Vec4): Vec4 {
   let ox: Float = 0.0;
   let oy: Float = 0.0;
   let ot: Float = 7.0;
-  if (it < PI && abs(ix - 0.5) < radius) {
+  if ((it < PI && abs(ix - 0.5) < radius) || abs(ix + 0.5) >= radius) {
     let x: Float = ix - 0.5;
     let y: Float = pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
     let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix - 1.0;
       oy = iy;
       ot = t;
     }
   }
-  if ((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) {
+  if (((it <= PI * 0.5 || it >= PI * 1.5) && abs(iy + 0.5) < radius) || abs(iy - 0.5) >= radius) {
     let y: Float = iy + 0.5;
     let x: Float = pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
     let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
       oy = iy + 1.0;
       ot = t;
     }
   }
-  if (it >= PI && abs(ix + 0.5) < radius) {
+  if ((it >= PI && abs(ix + 0.5) < radius) || abs(ix - 0.5) >= radius) {
     let x: Float = ix + 0.5;
     let y: Float = -pow(pow(radius, 2.0) - pow(x, 2.0), 0.5);
     let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix + 1.0;
       oy = iy;
       ot = t;
     }
   }
-  if (it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) {
+  if ((it > PI * 0.5 && it < PI * 1.5 && abs(iy - 0.5) < radius) || abs(iy + 0.5) >= radius) {
     let y: Float = iy - 0.5;
     let x: Float = -pow(pow(radius, 2.0) - pow(y, 2.0), 0.5);
     let t: Float = atan(y, x);
     if (t < 0.0) t += 2.0 * PI;
+    if (t < it) t += 2.0 * PI;
     if (t < ot) {
       ox = ix;
       oy = iy - 1.0;
       ot = t;
     }
   }
+  ot = mod(ot, PI2);
   return vec4(ox, oy, ot, radius);
 }
 
 function arcOverlap(loCel: Float, hiCel: Float, loArc: Float, hiArc: Float): Vec2 {
   let length: Float = 0.0;
   let theta: Float = 0.0;
-  if ((hiCel - loCel) + (hiArc - loArc) >= PI2) {
-    length = ((hiCel - loCel) + (hiArc - loArc)) - PI2;
-    theta = mod((loArc + hiArc) / 2.0 + PI, PI2);
+  let arcMidpointOpposite: Float = mod((hiArc + loArc) / 2.0 + PI, PI2);
+  if (
+    (
+      (arcMidpointOpposite > loCel && arcMidpointOpposite < hiCel) ||
+      ((arcMidpointOpposite + PI2) > loCel && (arcMidpointOpposite + PI2) < hiCel)
+    ) &&
+    (hiCel - loCel) + (hiArc - loArc) >= PI2
+  ) {
+    let loGap: Float = hiArc;
+    let hiGap: Float = loArc + PI2;
+    if (loGap >= hiCel) {
+      loGap -= PI2;
+      hiGap -= PI2;
+    }
+    loGap = max(loGap, loCel);
+    hiGap = min(hiGap, hiCel);
+    let midpointA: Float = (loCel + loGap) / 2.0;
+    let midpointB: Float = (hiCel + hiGap) / 2.0;
+    let lengthA: Float = abs(loCel - loGap);
+    let lengthB: Float = abs(hiCel - hiGap);
+    length = (lengthA + lengthB) / (hiArc - loArc);
+    theta = (midpointA * lengthA + midpointB * lengthB) / (lengthA + lengthB);
   } else {
     if (hiArc < loCel) {
       loArc += PI2;
@@ -286,16 +308,16 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   let s4567aHiBound: Vec4 = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2);
 
   s012_aHiBound = vec4(
-    s012_aLoBound[0] > s012_aHiBound[0] ? s012_aHiBound[0] + PI2 : s012_aHiBound[0],
-    s012_aLoBound[1] > s012_aHiBound[1] ? s012_aHiBound[1] + PI2 : s012_aHiBound[1],
-    s012_aLoBound[2] > s012_aHiBound[2] ? s012_aHiBound[2] + PI2 : s012_aHiBound[2],
-    s012_aLoBound[3] > s012_aHiBound[3] ? s012_aHiBound[3] + PI2 : s012_aHiBound[3]
+    s012_aLoBound[0] > s012_aHiBound[0] - epsilon ? s012_aHiBound[0] + PI2 : s012_aHiBound[0],
+    s012_aLoBound[1] > s012_aHiBound[1] - epsilon ? s012_aHiBound[1] + PI2 : s012_aHiBound[1],
+    s012_aLoBound[2] > s012_aHiBound[2] - epsilon ? s012_aHiBound[2] + PI2 : s012_aHiBound[2],
+    s012_aLoBound[3] > s012_aHiBound[3] - epsilon ? s012_aHiBound[3] + PI2 : s012_aHiBound[3]
   );
   s4567aHiBound = vec4(
-    s4567aLoBound[0] > s4567aHiBound[0] ? s4567aHiBound[0] + PI2 : s4567aHiBound[0],
-    s4567aLoBound[1] > s4567aHiBound[1] ? s4567aHiBound[1] + PI2 : s4567aHiBound[1],
-    s4567aLoBound[2] > s4567aHiBound[2] ? s4567aHiBound[2] + PI2 : s4567aHiBound[2],
-    s4567aLoBound[3] > s4567aHiBound[3] ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
+    s4567aLoBound[0] > s4567aHiBound[0] - epsilon ? s4567aHiBound[0] + PI2 : s4567aHiBound[0],
+    s4567aLoBound[1] > s4567aHiBound[1] - epsilon ? s4567aHiBound[1] + PI2 : s4567aHiBound[1],
+    s4567aLoBound[2] > s4567aHiBound[2] - epsilon ? s4567aHiBound[2] + PI2 : s4567aHiBound[2],
+    s4567aLoBound[3] > s4567aHiBound[3] - epsilon ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
   );
 
   let s0TransferFractionSum: Float = 0.0;
@@ -565,16 +587,16 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
     let s012_aHiBound: Vec4 = mod(add(add(s012_Bisector, s012_aArc), PI2), PI2);
     let s4567aHiBound: Vec4 = mod(add(add(s4567Bisector, s4567aArc), PI2), PI2);
     s012_aHiBound = vec4(
-      s012_aLoBound[0] > s012_aHiBound[0] ? s012_aHiBound[0] + PI2 : s012_aHiBound[0],
-      s012_aLoBound[1] > s012_aHiBound[1] ? s012_aHiBound[1] + PI2 : s012_aHiBound[1],
-      s012_aLoBound[2] > s012_aHiBound[2] ? s012_aHiBound[2] + PI2 : s012_aHiBound[2],
-      s012_aLoBound[3] > s012_aHiBound[3] ? s012_aHiBound[3] + PI2 : s012_aHiBound[3]
+      s012_aLoBound[0] > s012_aHiBound[0] - epsilon ? s012_aHiBound[0] + PI2 : s012_aHiBound[0],
+      s012_aLoBound[1] > s012_aHiBound[1] - epsilon ? s012_aHiBound[1] + PI2 : s012_aHiBound[1],
+      s012_aLoBound[2] > s012_aHiBound[2] - epsilon ? s012_aHiBound[2] + PI2 : s012_aHiBound[2],
+      s012_aLoBound[3] > s012_aHiBound[3] - epsilon ? s012_aHiBound[3] + PI2 : s012_aHiBound[3]
     );
     s4567aHiBound = vec4(
-      s4567aLoBound[0] > s4567aHiBound[0] ? s4567aHiBound[0] + PI2 : s4567aHiBound[0],
-      s4567aLoBound[1] > s4567aHiBound[1] ? s4567aHiBound[1] + PI2 : s4567aHiBound[1],
-      s4567aLoBound[2] > s4567aHiBound[2] ? s4567aHiBound[2] + PI2 : s4567aHiBound[2],
-      s4567aLoBound[3] > s4567aHiBound[3] ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
+      s4567aLoBound[0] > s4567aHiBound[0] - epsilon ? s4567aHiBound[0] + PI2 : s4567aHiBound[0],
+      s4567aLoBound[1] > s4567aHiBound[1] - epsilon ? s4567aHiBound[1] + PI2 : s4567aHiBound[1],
+      s4567aLoBound[2] > s4567aHiBound[2] - epsilon ? s4567aHiBound[2] + PI2 : s4567aHiBound[2],
+      s4567aLoBound[3] > s4567aHiBound[3] - epsilon ? s4567aHiBound[3] + PI2 : s4567aHiBound[3]
     );
 
     let s0TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s012_aLoBound[0], s012_aHiBound[0]), s0Attraction);
@@ -903,7 +925,7 @@ function addressRun(vUV: Vec2, uniforms, textures: Texture[]) {
   ];
 }
 
-class Sim {
+export class Sim {
   size = null;
   uniforms = null;
   textures = {};
@@ -959,7 +981,7 @@ class Sim {
 // stats
 // reduce(stats)
 // display
-function cycle(sim: Sim) {
+export function cycle(sim: Sim, config) {
   sim.compute(copyPaste, ['s01'], ['s01Prev']);
   sim.compute(copyPaste, ['s23'], ['s23Prev']);
   sim.compute(copyPaste, ['s45'], ['s45Prev']);
@@ -974,7 +996,6 @@ function cycle(sim: Sim) {
       's45FWTFS', 's67FWTFS', 's45Given', 's67Given',
     ]
   );
-
   sim.compute(
     transferRun,
     [
@@ -1002,7 +1023,7 @@ function cycle(sim: Sim) {
   // ]);
 }
 
-function print(texture) {
+export function print(texture) {
   const string1 = texture
     .map((row) => row.map(([x, y, ,]) => len([x, y]).toFixed(2).padStart(6)).join(' '))
     .join('\n');
@@ -1014,7 +1035,10 @@ function print(texture) {
   console.log('\n');
 }
 
-export default function main() {
+export function test() {
+  let {config, texturePack} = defaultConfig;
+  config = {...config, size: 4};
+
   const sim = new Sim();
   const uniforms = configToUniforms(config);
 
@@ -1023,6 +1047,6 @@ export default function main() {
   Object.assign(sim.textures, textures);
   sim.size = config.size;
   sim.uniforms = uniforms;
-  for (let i = 0; i < 5; i++) cycle(sim);
+  for (let i = 0; i < 5; i++) cycle(sim, config);
   print(sim.textures['s0123Len']);
 }
