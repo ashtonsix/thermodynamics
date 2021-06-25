@@ -42,10 +42,14 @@ const attributeClamps = {
 
 export function configToUniforms(config) {
   const substances = config.substances.slice()
-  const displaySubstances = config.display.substances.slice()
+  const displaySubstances = config.display
+    ? config.display.substances.slice()
+    : []
   const avgRelativeBrightness =
-    displaySubstances.reduce((pv, v) => pv + +v.relativeBrightness, 0) /
-    displaySubstances.length
+    displaySubstances.reduce(
+      (pv, v) => pv + (v.active ? +v.relativeBrightness : 0),
+      0
+    ) / displaySubstances.length
   substances.splice(3, 0, {...defaultSubstance})
   displaySubstances.splice(3, 0, {...defaultSubstance})
   const substanceAttribute = (offset, key) => {
@@ -82,7 +86,7 @@ export function configToUniforms(config) {
     const ai = substances.findIndex((s) => s.name === a)
     const bi = substances.findIndex((s) => s.name === b)
     if (ai === -1 || bi === -1) continue
-    am[ai][bi] = clamp(v, 0, bigilon10)
+    am[ai][bi] = clamp(v, -bigilon10, bigilon10)
   }
 
   const display = {...defaultDisplay, ...config.display}
@@ -126,14 +130,12 @@ export function configToUniforms(config) {
       colors[4].concat(0),
       substanceAttribute(0, 'relativeBrightness'),
       substanceAttribute(1, 'relativeBrightness'),
-      [+config.display.substances[7].relativeBrightness, +config.display.substances[8].relativeBrightness, 0, 0],
+      [+config.display?.substances?.[7]?.relativeBrightness, +config.display?.substances?.[8]?.relativeBrightness, 0, 0],
       substanceAttribute(0, 'softmaxHue'),
       substanceAttribute(1, 'softmaxHue'),
-      [+config.display.substances[7].softmaxHue, +config.display.substances[8].softmaxHue, 0, 0],
+      [+config.display?.substances?.[7]?.softmaxHue, +config.display?.substances?.[8]?.softmaxHue, 0, 0],
     ]
   }
-
-  console.log(uniforms)
 
   return uniforms
 }

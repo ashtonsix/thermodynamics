@@ -196,10 +196,16 @@ function arcOverlap(loCel: Float, hiCel: Float, loArc: Float, hiArc: Float): Vec
   return vec2(cos(theta) * length, sin(theta) * length);
 }
 
-function copyPaste(vUV: Vec2, uniforms, textures: Texture[]) {
+type Uniforms = {
+  static: Float[],
+  substance: Vec4[],
+  substanceAttractionMatrix: Vec4[]
+}
+
+function copyPaste(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   return [texture(textures[0], vUV)];
 }
-function compactLength(vUV: Vec2, uniforms, textures: Texture[]) {
+function compactLength(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   let c01: Vec4 = texture(textures[0], vUV); // substance01
   let c23: Vec4 = texture(textures[1], vUV); // substance23
   let s0: Vec2 = vec2(c01[0], c01[1]);
@@ -209,7 +215,7 @@ function compactLength(vUV: Vec2, uniforms, textures: Texture[]) {
 
   return [vec4(len(s0), len(s1), len(s2), len(s3))];
 }
-function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
+function transferPrepare(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   const [uSize, uTransferRadius] = uniforms.static;
   const [
     uArc012_, uArcWeight012_, uArcBlending012_,
@@ -358,28 +364,33 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
     s012_bLen[3] = 0.0;
 
     let sbLenTotal: Float = sum(s012_bLen) + sum(s4567bLen);
-    let s012_bLenFraction: Vec4 = divSafe(s012_bLen, sbLenTotal, 0.0);
-    let s4567bLenFraction: Vec4 = divSafe(s4567bLen, sbLenTotal, 0.0);
+    s012_bLen = divSafe(s012_bLen, sbLenTotal, 0.0);
+    s4567bLen = divSafe(s4567bLen, sbLenTotal, 0.0);
 
-    let s0Attraction: Float = dot(s012_bLenFraction, am0x012_) + dot(s4567bLenFraction, am0x4567);
-    let s1Attraction: Float = dot(s012_bLenFraction, am1x012_) + dot(s4567bLenFraction, am1x4567);
-    let s2Attraction: Float = dot(s012_bLenFraction, am2x012_) + dot(s4567bLenFraction, am2x4567);
-    let s_Attraction: Float = dot(s012_bLenFraction, am_x012_) + dot(s4567bLenFraction, am_x4567);
-    let s4Attraction: Float = dot(s012_bLenFraction, am4x012_) + dot(s4567bLenFraction, am4x4567);
-    let s5Attraction: Float = dot(s012_bLenFraction, am5x012_) + dot(s4567bLenFraction, am5x4567);
-    let s6Attraction: Float = dot(s012_bLenFraction, am6x012_) + dot(s4567bLenFraction, am6x4567);
-    let s7Attraction: Float = dot(s012_bLenFraction, am7x012_) + dot(s4567bLenFraction, am7x4567);
-    let sAttractionSum: Float =
-      sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) +
-      sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
-    s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction;
-    s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction;
-    s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction;
-    s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction;
-    s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction;
-    s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction;
-    s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction;
-    s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction;
+    let s0Attraction: Float = add(dot(s012_bLen, max(am0x012_, 0.0)), dot(s4567bLen, max(am0x4567, 0.0)));
+    let s1Attraction: Float = add(dot(s012_bLen, max(am1x012_, 0.0)), dot(s4567bLen, max(am1x4567, 0.0)));
+    let s2Attraction: Float = add(dot(s012_bLen, max(am2x012_, 0.0)), dot(s4567bLen, max(am2x4567, 0.0)));
+    let s_Attraction: Float = add(dot(s012_bLen, max(am_x012_, 0.0)), dot(s4567bLen, max(am_x4567, 0.0)));
+    let s4Attraction: Float = add(dot(s012_bLen, max(am4x012_, 0.0)), dot(s4567bLen, max(am4x4567, 0.0)));
+    let s5Attraction: Float = add(dot(s012_bLen, max(am5x012_, 0.0)), dot(s4567bLen, max(am5x4567, 0.0)));
+    let s6Attraction: Float = add(dot(s012_bLen, max(am6x012_, 0.0)), dot(s4567bLen, max(am6x4567, 0.0)));
+    let s7Attraction: Float = add(dot(s012_bLen, max(am7x012_, 0.0)), dot(s4567bLen, max(am7x4567, 0.0)));
+    s0Attraction = div(s0Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am0x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am0x4567), 0.0))));
+    s1Attraction = div(s1Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am1x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am1x4567), 0.0))));
+    s2Attraction = div(s2Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am2x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am2x4567), 0.0))));
+    s_Attraction = div(s_Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am_x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am_x4567), 0.0))));
+    s4Attraction = div(s4Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am4x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am4x4567), 0.0))));
+    s5Attraction = div(s5Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am5x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am5x4567), 0.0))));
+    s6Attraction = div(s6Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am6x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am6x4567), 0.0))));
+    s7Attraction = div(s7Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am7x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am7x4567), 0.0))));
+    s0Attraction = sbLenTotal === 0.0 ? 1.0 : s0Attraction;
+    s1Attraction = sbLenTotal === 0.0 ? 1.0 : s1Attraction;
+    s2Attraction = sbLenTotal === 0.0 ? 1.0 : s2Attraction;
+    s_Attraction = sbLenTotal === 0.0 ? 1.0 : s_Attraction;
+    s4Attraction = sbLenTotal === 0.0 ? 1.0 : s4Attraction;
+    s5Attraction = sbLenTotal === 0.0 ? 1.0 : s5Attraction;
+    s6Attraction = sbLenTotal === 0.0 ? 1.0 : s6Attraction;
+    s7Attraction = sbLenTotal === 0.0 ? 1.0 : s7Attraction;
 
     let s0TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s012_aLoBound[0], s012_aHiBound[0]), s0Attraction);
     let s1TransferFraction: Vec2 = mul(arcOverlap(loBound, hiBound, s012_aLoBound[1], s012_aHiBound[1]), s1Attraction);
@@ -450,7 +461,7 @@ function transferPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
   return [s01FWTFS, s2_FWTFS, s01Given, s2_Given, s45FWTFS, s67FWTFS, s45Given, s67Given];
 }
 
-function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
+function transferRun(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   const [uSize, uTransferRadius] = uniforms.static;
   const [
     uArc012_, /* uArcWeight012_ */, uArcBlending012_,
@@ -492,28 +503,33 @@ function transferRun(vUV: Vec2, uniforms, textures: Texture[]) {
   let s4567bLen: Vec4 = vec4(s4bLen, s5bLen, s6bLen, s7bLen);
 
   let sbLenTotal: Float = sum(s012_bLen) + sum(s4567bLen);
-  let s012_bLenFraction: Vec4 = divSafe(s012_bLen, sbLenTotal, 0.0);
-  let s4567bLenFraction: Vec4 = divSafe(s4567bLen, sbLenTotal, 0.0);
+  s012_bLen = divSafe(s012_bLen, sbLenTotal, 0.0);
+  s4567bLen = divSafe(s4567bLen, sbLenTotal, 0.0);
 
-  let s0Attraction: Float = dot(s012_bLenFraction, am0x012_) + dot(s4567bLenFraction, am0x4567);
-  let s1Attraction: Float = dot(s012_bLenFraction, am1x012_) + dot(s4567bLenFraction, am1x4567);
-  let s2Attraction: Float = dot(s012_bLenFraction, am2x012_) + dot(s4567bLenFraction, am2x4567);
-  let s_Attraction: Float = dot(s012_bLenFraction, am_x012_) + dot(s4567bLenFraction, am_x4567);
-  let s4Attraction: Float = dot(s012_bLenFraction, am4x012_) + dot(s4567bLenFraction, am4x4567);
-  let s5Attraction: Float = dot(s012_bLenFraction, am5x012_) + dot(s4567bLenFraction, am5x4567);
-  let s6Attraction: Float = dot(s012_bLenFraction, am6x012_) + dot(s4567bLenFraction, am6x4567);
-  let s7Attraction: Float = dot(s012_bLenFraction, am7x012_) + dot(s4567bLenFraction, am7x4567);
-  let sAttractionSum: Float =
-    sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) +
-    sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction));
-  s0Attraction = sAttractionSum === 0.0 ? 1.0 : s0Attraction;
-  s1Attraction = sAttractionSum === 0.0 ? 1.0 : s1Attraction;
-  s2Attraction = sAttractionSum === 0.0 ? 1.0 : s2Attraction;
-  s_Attraction = sAttractionSum === 0.0 ? 1.0 : s_Attraction;
-  s4Attraction = sAttractionSum === 0.0 ? 1.0 : s4Attraction;
-  s5Attraction = sAttractionSum === 0.0 ? 1.0 : s5Attraction;
-  s6Attraction = sAttractionSum === 0.0 ? 1.0 : s6Attraction;
-  s7Attraction = sAttractionSum === 0.0 ? 1.0 : s7Attraction;
+  let s0Attraction: Float = add(dot(s012_bLen, max(am0x012_, 0.0)), dot(s4567bLen, max(am0x4567, 0.0)));
+  let s1Attraction: Float = add(dot(s012_bLen, max(am1x012_, 0.0)), dot(s4567bLen, max(am1x4567, 0.0)));
+  let s2Attraction: Float = add(dot(s012_bLen, max(am2x012_, 0.0)), dot(s4567bLen, max(am2x4567, 0.0)));
+  let s_Attraction: Float = add(dot(s012_bLen, max(am_x012_, 0.0)), dot(s4567bLen, max(am_x4567, 0.0)));
+  let s4Attraction: Float = add(dot(s012_bLen, max(am4x012_, 0.0)), dot(s4567bLen, max(am4x4567, 0.0)));
+  let s5Attraction: Float = add(dot(s012_bLen, max(am5x012_, 0.0)), dot(s4567bLen, max(am5x4567, 0.0)));
+  let s6Attraction: Float = add(dot(s012_bLen, max(am6x012_, 0.0)), dot(s4567bLen, max(am6x4567, 0.0)));
+  let s7Attraction: Float = add(dot(s012_bLen, max(am7x012_, 0.0)), dot(s4567bLen, max(am7x4567, 0.0)));
+  s0Attraction = div(s0Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am0x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am0x4567), 0.0))));
+  s1Attraction = div(s1Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am1x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am1x4567), 0.0))));
+  s2Attraction = div(s2Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am2x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am2x4567), 0.0))));
+  s_Attraction = div(s_Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am_x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am_x4567), 0.0))));
+  s4Attraction = div(s4Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am4x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am4x4567), 0.0))));
+  s5Attraction = div(s5Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am5x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am5x4567), 0.0))));
+  s6Attraction = div(s6Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am6x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am6x4567), 0.0))));
+  s7Attraction = div(s7Attraction, (1.0 + dot(s012_bLen, max(mul(-1.0, am7x012_), 0.0)) + dot(s4567bLen, max(mul(-1.0, am7x4567), 0.0))));
+  s0Attraction = sbLenTotal === 0.0 ? 1.0 : s0Attraction;
+  s1Attraction = sbLenTotal === 0.0 ? 1.0 : s1Attraction;
+  s2Attraction = sbLenTotal === 0.0 ? 1.0 : s2Attraction;
+  s_Attraction = sbLenTotal === 0.0 ? 1.0 : s_Attraction;
+  s4Attraction = sbLenTotal === 0.0 ? 1.0 : s4Attraction;
+  s5Attraction = sbLenTotal === 0.0 ? 1.0 : s5Attraction;
+  s6Attraction = sbLenTotal === 0.0 ? 1.0 : s6Attraction;
+  s7Attraction = sbLenTotal === 0.0 ? 1.0 : s7Attraction;
 
   let s0FloLen: Float = 0.0;
   let s1FloLen: Float = 0.0;
@@ -732,8 +748,8 @@ function substanceReactGenerator(config) {
       len(vec2(cs67[0], cs67[1])),
       len(vec2(cs67[2], cs67[3]))
     );
-    let initial2: Vec4 = vec4(max(ca0123[0], 0.0), max(ca0123[1], 0.0), max(ca0123[2], 0.0), max(ca0123[3], 0.0));
-    let initial3: Vec4 = vec4(max(ca4567[0], 0.0), max(ca4567[1], 0.0), max(ca4567[2], 0.0), max(ca4567[3], 0.0));
+    let initial2: Vec4 = max(ca0123, 0.0);
+    let initial3: Vec4 = max(ca4567, 0.0);
 
     let input0: Vec4 = initial0;
     let input1: Vec4 = initial1;
@@ -898,12 +914,12 @@ function substanceReactGenerator(config) {
 
   return substanceReact;
 }
-function addressPrepare(vUV: Vec2, uniforms, textures: Texture[]) {
+function addressPrepare(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   let ca0123: Vec4 = texture(textures[0], vUV); // address0123
   let ca4567: Vec4 = texture(textures[1], vUV); // address4567
   return [max(mul(ca0123, -1.0), 0.0), max(mul(ca4567, -1.0), 0.0)];
 }
-function addressRun(vUV: Vec2, uniforms, textures: Texture[]) {
+function addressRun(vUV: Vec2, uniforms: Uniforms, textures: Texture[]) {
   let ca0123: Vec4 = texture(textures[0], vUV); // address0123
   let ca4567: Vec4 = texture(textures[1], vUV); // address4567
   let cat0123: Vec4 = texture(textures[2], vUV); // addressTotal0123

@@ -3,6 +3,25 @@ import quadShader from './shaders/quad.vert'
 import reduce1Shader from './shaders/reduce1.frag'
 import reduce2Shader from './shaders/reduce2.frag'
 
+const wait = (f) => {
+  let interval = 1
+
+  return new Promise((resolve, reject) => {
+    function test() {
+      interval *= 1.5
+      try {
+        const success = f()
+        if (success) resolve()
+        else if (interval > 1000) reject(new Error('timeout'))
+        else setTimeout(test, interval)
+      } catch (e) {
+        reject(e)
+      }
+    }
+    test()
+  })
+}
+
 export default class ShaderBridge {
   destroyed = false
   canvas = null
@@ -67,6 +86,58 @@ export default class ShaderBridge {
     }
 
     return drawCall
+  }
+  async read(textureName) {
+    const gl = this.pico.gl
+
+    const texture = this.textures.read[textureName]
+    const tw = texture.width
+    const th = texture.height
+    const pixels = new Float32Array(tw * th * 4)
+    const buf = gl.createBuffer()
+    const fb = gl.createFramebuffer()
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      texture.texture,
+      0
+    )
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf)
+    gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ)
+    gl.readPixels(0, 0, tw, th, gl.RGBA, gl.FLOAT, 0)
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
+    await this.waitUntilIdle()
+
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf)
+    gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels)
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null)
+
+    gl.deleteBuffer(buf)
+
+    return pixels
+  }
+  async waitUntilIdle() {
+    const gl = this.pico.gl
+
+    const start = performance.now()
+    const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+    gl.flush()
+
+    await wait(() => {
+      const status = gl.clientWaitSync(sync, 0, 0)
+      if (status === gl.WAIT_FAILED) throw new Error('failed')
+      const success = status !== gl.TIMEOUT_EXPIRED
+      return success
+    }).catch(() => {})
+    gl.deleteSync(sync)
+
+    const time = performance.now() - start
+    return time
   }
   setTextures(textures) {
     for (const k in textures) {
@@ -153,6 +224,7 @@ export default class ShaderBridge {
   }
   constructor(size) {
     this.size = size
+    ;(window as any).shaderBridge = this
 
     const canvas = document.createElement('canvas')
     canvas.style.width = size + 'px'

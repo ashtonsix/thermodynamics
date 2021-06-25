@@ -221,10 +221,10 @@ void copyPaste() {
 void compactLength() {
   vec4 c01 = texture(texture0, vUV); // substance01
   vec4 c23 = texture(texture1, vUV); // substance23
-  vec2 s0 = vec2(c01.x, c01.y);
-  vec2 s1 = vec2(c01.z, c01.w);
-  vec2 s2 = vec2(c23.x, c23.y);
-  vec2 s3 = vec2(c23.z, c23.w);
+  vec2 s0 = c01.xy;
+  vec2 s1 = c01.zw;
+  vec2 s2 = c23.xy;
+  vec2 s3 = c23.zw;
 
   fragColor0 = vec4(length(s0), length(s1), length(s2), length(s3));
 }
@@ -236,14 +236,14 @@ void transferPrepare() {
   /*8 vec4 c67a = texture(texture4, vUV); 8*/ // substance67a
   c2_a.z = 0.0;
   c2_a.w = 0.0;
-  vec2 s0a = vec2(c01a.x, c01a.y);
-  vec2 s1a = vec2(c01a.z, c01a.w);
-  vec2 s2a = vec2(c2_a.x, c2_a.y);
-  vec2 s_a = vec2(c2_a.z, c2_a.w);
-  /*8 vec2 s4a = vec2(c45a.x, c45a.y); 8*/
-  /*8 vec2 s5a = vec2(c45a.z, c45a.w); 8*/
-  /*8 vec2 s6a = vec2(c67a.x, c67a.y); 8*/
-  /*8 vec2 s7a = vec2(c67a.z, c67a.w); 8*/
+  vec2 s0a = c01a.xy;
+  vec2 s1a = c01a.zw;
+  vec2 s2a = c2_a.xy;
+  vec2 s_a = c2_a.zw;
+  /*8 vec2 s4a = c45a.xy; 8*/
+  /*8 vec2 s5a = c45a.zw; 8*/
+  /*8 vec2 s6a = c67a.xy; 8*/
+  /*8 vec2 s7a = c67a.zw; 8*/
   float s0aLen = length(s0a);
   float s1aLen = length(s1a);
   float s2aLen = length(s2a);
@@ -260,12 +260,12 @@ void transferPrepare() {
   /*8 vec4 s4567aY = vec4(s4a.y, s5a.y, s6a.y, s7a.y); 8*/
 
   float avgArc = divSafe(
-    dot(uArc012_, (s012_aLen * uArcWeight012_)) /*8 + dot(uArc4567, (s4567aLen * uArcWeight4567)) 8*/,
+    dot(uArc012_, s012_aLen * uArcWeight012_) /*8 + dot(uArc4567, s4567aLen * uArcWeight4567) 8*/,
     dot(s012_aLen, uArcWeight012_) /*8 + dot(s4567aLen, uArcWeight4567) 8*/,
     -1.0
   );
   float avgFlo = divSafe(
-    dot(uFlo012_, (s012_aLen * uFloWeight012_)) /*8 + dot(uFlo4567, (s4567aLen * uFloWeight4567)) 8*/,
+    dot(uFlo012_, s012_aLen * uFloWeight012_) /*8 + dot(uFlo4567, s4567aLen * uFloWeight4567) 8*/,
     dot(s012_aLen, uFloWeight012_) /*8 + dot(s4567aLen, uFloWeight4567) 8*/,
     -1.0
   );
@@ -280,16 +280,16 @@ void transferPrepare() {
   /*8 vec4 s4567aArc = avgArc == -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567); 8*/
   vec4 s012_aFlo = avgFlo == -1.0 ? uFlo012_ : mix(uFlo012_, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending012_);
   /*8 vec4 s4567aFlo = avgFlo == -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567); 8*/
-  s012_aFlo = (s012_aFlo * s012_aLen);
-  /*8 s4567aFlo = (s4567aFlo * s4567aLen); 8*/
-  s0a = (normalizeSafe(mix(normalizeSafe(s0a), avgDir, uDirBlending012_.x)) * s0aLen);
-  s1a = (normalizeSafe(mix(normalizeSafe(s1a), avgDir, uDirBlending012_.y)) * s1aLen);
-  s2a = (normalizeSafe(mix(normalizeSafe(s2a), avgDir, uDirBlending012_.z)) * s2aLen);
-  s_a = (normalizeSafe(mix(normalizeSafe(s_a), avgDir, uDirBlending012_.w)) * s_aLen);
-  /*8 s4a = (normalizeSafe(mix(normalizeSafe(s4a), avgDir, uDirBlending4567.x)) * s4aLen); 8*/
-  /*8 s5a = (normalizeSafe(mix(normalizeSafe(s5a), avgDir, uDirBlending4567.y)) * s5aLen); 8*/
-  /*8 s6a = (normalizeSafe(mix(normalizeSafe(s6a), avgDir, uDirBlending4567.z)) * s6aLen); 8*/
-  /*8 s7a = (normalizeSafe(mix(normalizeSafe(s7a), avgDir, uDirBlending4567.w)) * s7aLen); 8*/
+  s012_aFlo = s012_aFlo * s012_aLen;
+  /*8 s4567aFlo = s4567aFlo * s4567aLen; 8*/
+  s0a = normalizeSafe(mix(normalizeSafe(s0a), avgDir, uDirBlending012_.x)) * s0aLen;
+  s1a = normalizeSafe(mix(normalizeSafe(s1a), avgDir, uDirBlending012_.y)) * s1aLen;
+  s2a = normalizeSafe(mix(normalizeSafe(s2a), avgDir, uDirBlending012_.z)) * s2aLen;
+  s_a = normalizeSafe(mix(normalizeSafe(s_a), avgDir, uDirBlending012_.w)) * s_aLen;
+  /*8 s4a = normalizeSafe(mix(normalizeSafe(s4a), avgDir, uDirBlending4567.x)) * s4aLen; 8*/
+  /*8 s5a = normalizeSafe(mix(normalizeSafe(s5a), avgDir, uDirBlending4567.y)) * s5aLen; 8*/
+  /*8 s6a = normalizeSafe(mix(normalizeSafe(s6a), avgDir, uDirBlending4567.z)) * s6aLen; 8*/
+  /*8 s7a = normalizeSafe(mix(normalizeSafe(s7a), avgDir, uDirBlending4567.w)) * s7aLen; 8*/
 
   vec4 s012_Bisector = vec4(
     atan(s0a.y, s0a.x),
@@ -303,10 +303,10 @@ void transferPrepare() {
     atan(s6a.y, s6a.x),
     atan(s7a.y, s7a.x)
   ); 8*/
-  vec4 s012_aLoBound = mod(((s012_Bisector - s012_aArc) + PI2), PI2);
-  /*8 vec4 s4567aLoBound = mod(((s4567Bisector - s4567aArc) + PI2), PI2); 8*/
-  vec4 s012_aHiBound = mod(((s012_Bisector + s012_aArc) + PI2), PI2);
-  /*8 vec4 s4567aHiBound = mod(((s4567Bisector + s4567aArc) + PI2), PI2); 8*/
+  vec4 s012_aLoBound = mod(s012_Bisector - s012_aArc + PI2, PI2);
+  /*8 vec4 s4567aLoBound = mod(s4567Bisector - s4567aArc + PI2, PI2); 8*/
+  vec4 s012_aHiBound = mod(s012_Bisector + s012_aArc + PI2, PI2);
+  /*8 vec4 s4567aHiBound = mod(s4567Bisector + s4567aArc + PI2, PI2); 8*/
 
   s012_aHiBound = vec4(
     s012_aLoBound.x > (s012_aHiBound.x - epsilon) ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
@@ -359,37 +359,42 @@ void transferPrepare() {
     /*8 vec4 s4567bLen = texture(texture5, vvUV); 8*/ // substance4567b
 
     float sbLenTotal = sum(s012_bLen) /*8 + sum(s4567bLen) 8*/;
-    vec4 s012_bLenFraction = divSafe(s012_bLen, sbLenTotal, 0.0);
-    /*8 vec4 s4567bLenFraction = divSafe(s4567bLen, sbLenTotal, 0.0); 8*/
+    s012_bLen = divSafe(s012_bLen, sbLenTotal, 0.0);
+    /*8 s4567bLen = divSafe(s4567bLen, sbLenTotal, 0.0); 8*/
 
-    float s0Attraction = dot(s012_bLenFraction, am0x012_) /*8 + dot(s4567bLenFraction, am0x4567) 8*/;
-    float s1Attraction = dot(s012_bLenFraction, am1x012_) /*8 + dot(s4567bLenFraction, am1x4567) 8*/;
-    float s2Attraction = dot(s012_bLenFraction, am2x012_) /*8 + dot(s4567bLenFraction, am2x4567) 8*/;
-    float s_Attraction = dot(s012_bLenFraction, am_x012_) /*8 + dot(s4567bLenFraction, am_x4567) 8*/;
-    /*8 float s4Attraction = dot(s012_bLenFraction, am4x012_) + dot(s4567bLenFraction, am4x4567); 8*/
-    /*8 float s5Attraction = dot(s012_bLenFraction, am5x012_) + dot(s4567bLenFraction, am5x4567); 8*/
-    /*8 float s6Attraction = dot(s012_bLenFraction, am6x012_) + dot(s4567bLenFraction, am6x4567); 8*/
-    /*8 float s7Attraction = dot(s012_bLenFraction, am7x012_) + dot(s4567bLenFraction, am7x4567); 8*/
-    float sAttractionSum =
-      sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) /*8 +
-      sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction)) 8*/;
-    s0Attraction = sAttractionSum == 0.0 ? 1.0 : s0Attraction;
-    s1Attraction = sAttractionSum == 0.0 ? 1.0 : s1Attraction;
-    s2Attraction = sAttractionSum == 0.0 ? 1.0 : s2Attraction;
-    s_Attraction = sAttractionSum == 0.0 ? 1.0 : s_Attraction;
-    /*8 s4Attraction = sAttractionSum == 0.0 ? 1.0 : s4Attraction; 8*/
-    /*8 s5Attraction = sAttractionSum == 0.0 ? 1.0 : s5Attraction; 8*/
-    /*8 s6Attraction = sAttractionSum == 0.0 ? 1.0 : s6Attraction; 8*/
-    /*8 s7Attraction = sAttractionSum == 0.0 ? 1.0 : s7Attraction; 8*/
+    float s0Attraction = dot(s012_bLen, max(am0x012_, 0.0)) /*8 + dot(s4567bLen, max(am0x4567, 0.0)) 8*/;
+    float s1Attraction = dot(s012_bLen, max(am1x012_, 0.0)) /*8 + dot(s4567bLen, max(am1x4567, 0.0)) 8*/;
+    float s2Attraction = dot(s012_bLen, max(am2x012_, 0.0)) /*8 + dot(s4567bLen, max(am2x4567, 0.0)) 8*/;
+    float s_Attraction = dot(s012_bLen, max(am_x012_, 0.0)) /*8 + dot(s4567bLen, max(am_x4567, 0.0)) 8*/;
+    /*8 float s4Attraction = dot(s012_bLen, max(am4x012_, 0.0)) + dot(s4567bLen, max(am4x4567, 0.0)); 8*/
+    /*8 float s5Attraction = dot(s012_bLen, max(am5x012_, 0.0)) + dot(s4567bLen, max(am5x4567, 0.0)); 8*/
+    /*8 float s6Attraction = dot(s012_bLen, max(am6x012_, 0.0)) + dot(s4567bLen, max(am6x4567, 0.0)); 8*/
+    /*8 float s7Attraction = dot(s012_bLen, max(am7x012_, 0.0)) + dot(s4567bLen, max(am7x4567, 0.0)); 8*/
+    s0Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am0x012_, 0.0)) /*8 + dot(s4567bLen, max(-am0x4567, 0.0)) 8*/);
+    s1Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am1x012_, 0.0)) /*8 + dot(s4567bLen, max(-am1x4567, 0.0)) 8*/);
+    s2Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am2x012_, 0.0)) /*8 + dot(s4567bLen, max(-am2x4567, 0.0)) 8*/);
+    s_Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am_x012_, 0.0)) /*8 + dot(s4567bLen, max(-am_x4567, 0.0)) 8*/);
+    /*8 s4Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am4x012_, 0.0)) + dot(s4567bLen, max(-am4x4567, 0.0))); 8*/
+    /*8 s5Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am5x012_, 0.0)) + dot(s4567bLen, max(-am5x4567, 0.0))); 8*/
+    /*8 s6Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am6x012_, 0.0)) + dot(s4567bLen, max(-am6x4567, 0.0))); 8*/
+    /*8 s7Attraction *= 1.0 / (1.0 + dot(s012_bLen, max(-am7x012_, 0.0)) + dot(s4567bLen, max(-am7x4567, 0.0))); 8*/
+    s0Attraction = sbLenTotal == 0.0 ? 1.0 : s0Attraction;
+    s1Attraction = sbLenTotal == 0.0 ? 1.0 : s1Attraction;
+    s2Attraction = sbLenTotal == 0.0 ? 1.0 : s2Attraction;
+    s_Attraction = sbLenTotal == 0.0 ? 1.0 : s_Attraction;
+    /*8 s4Attraction = sbLenTotal == 0.0 ? 1.0 : s4Attraction; 8*/
+    /*8 s5Attraction = sbLenTotal == 0.0 ? 1.0 : s5Attraction; 8*/
+    /*8 s6Attraction = sbLenTotal == 0.0 ? 1.0 : s6Attraction; 8*/
+    /*8 s7Attraction = sbLenTotal == 0.0 ? 1.0 : s7Attraction; 8*/
 
-    vec2 s0TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.x, s012_aHiBound.x) * s0Attraction);
-    vec2 s1TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.y, s012_aHiBound.y) * s1Attraction);
-    vec2 s2TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.z, s012_aHiBound.z) * s2Attraction);
-    vec2 s_TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.w, s012_aHiBound.w) * s_Attraction);
-    /*8 vec2 s4TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.x, s4567aHiBound.x) * s4Attraction); 8*/
-    /*8 vec2 s5TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.y, s4567aHiBound.y) * s5Attraction); 8*/
-    /*8 vec2 s6TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.z, s4567aHiBound.z) * s6Attraction); 8*/
-    /*8 vec2 s7TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.w, s4567aHiBound.w) * s7Attraction); 8*/
+    vec2 s0TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.x, s012_aHiBound.x) * s0Attraction;
+    vec2 s1TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.y, s012_aHiBound.y) * s1Attraction;
+    vec2 s2TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.z, s012_aHiBound.z) * s2Attraction;
+    vec2 s_TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.w, s012_aHiBound.w) * s_Attraction;
+    /*8 vec2 s4TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.x, s4567aHiBound.x) * s4Attraction; 8*/
+    /*8 vec2 s5TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.y, s4567aHiBound.y) * s5Attraction; 8*/
+    /*8 vec2 s6TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.z, s4567aHiBound.z) * s6Attraction; 8*/
+    /*8 vec2 s7TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.w, s4567aHiBound.w) * s7Attraction; 8*/
 
     s0TransferFractionSum += length(s0TransferFraction);
     s1TransferFractionSum += length(s1TransferFraction);
@@ -400,14 +405,14 @@ void transferPrepare() {
     /*8 s6TransferFractionSum += length(s6TransferFraction); 8*/
     /*8 s7TransferFractionSum += length(s7TransferFraction); 8*/
 
-    s0GivenDir = (s0GivenDir + s0TransferFraction);
-    s1GivenDir = (s1GivenDir + s1TransferFraction);
-    s2GivenDir = (s2GivenDir + s2TransferFraction);
-    s_GivenDir = (s_GivenDir + s_TransferFraction);
-    /*8 s4GivenDir = (s4GivenDir + s4TransferFraction); 8*/
-    /*8 s5GivenDir = (s5GivenDir + s5TransferFraction); 8*/
-    /*8 s6GivenDir = (s6GivenDir + s6TransferFraction); 8*/
-    /*8 s7GivenDir = (s7GivenDir + s7TransferFraction); 8*/
+    s0GivenDir = s0GivenDir + s0TransferFraction;
+    s1GivenDir = s1GivenDir + s1TransferFraction;
+    s2GivenDir = s2GivenDir + s2TransferFraction;
+    s_GivenDir = s_GivenDir + s_TransferFraction;
+    /*8 s4GivenDir = s4GivenDir + s4TransferFraction; 8*/
+    /*8 s5GivenDir = s5GivenDir + s5TransferFraction; 8*/
+    /*8 s6GivenDir = s6GivenDir + s6TransferFraction; 8*/
+    /*8 s7GivenDir = s7GivenDir + s7TransferFraction; 8*/
 
     if (hiBound > PI2) {
       break;
@@ -415,33 +420,33 @@ void transferPrepare() {
   }
 
   // flowWeightedTransferFractionSum
-  vec2 s0FWTFS = (normalizeSafe(s0a) * divSafe(s0TransferFractionSum, s012_aFlo.x, 0.0));
-  vec2 s1FWTFS = (normalizeSafe(s1a) * divSafe(s1TransferFractionSum, s012_aFlo.y, 0.0));
-  vec2 s2FWTFS = (normalizeSafe(s2a) * divSafe(s2TransferFractionSum, s012_aFlo.z, 0.0));
-  vec2 s_FWTFS = (normalizeSafe(s_a) * divSafe(s_TransferFractionSum, s012_aFlo.w, 0.0));
-  /*8 vec2 s4FWTFS = (normalizeSafe(s4a) * divSafe(s4TransferFractionSum, s4567aFlo.x, 0.0)); 8*/
-  /*8 vec2 s5FWTFS = (normalizeSafe(s5a) * divSafe(s5TransferFractionSum, s4567aFlo.y, 0.0)); 8*/
-  /*8 vec2 s6FWTFS = (normalizeSafe(s6a) * divSafe(s6TransferFractionSum, s4567aFlo.z, 0.0)); 8*/
-  /*8 vec2 s7FWTFS = (normalizeSafe(s7a) * divSafe(s7TransferFractionSum, s4567aFlo.w, 0.0)); 8*/
+  vec2 s0FWTFS = normalizeSafe(s0a) * divSafe(s0TransferFractionSum, s012_aFlo.x, 0.0);
+  vec2 s1FWTFS = normalizeSafe(s1a) * divSafe(s1TransferFractionSum, s012_aFlo.y, 0.0);
+  vec2 s2FWTFS = normalizeSafe(s2a) * divSafe(s2TransferFractionSum, s012_aFlo.z, 0.0);
+  vec2 s_FWTFS = normalizeSafe(s_a) * divSafe(s_TransferFractionSum, s012_aFlo.w, 0.0);
+  /*8 vec2 s4FWTFS = normalizeSafe(s4a) * divSafe(s4TransferFractionSum, s4567aFlo.x, 0.0); 8*/
+  /*8 vec2 s5FWTFS = normalizeSafe(s5a) * divSafe(s5TransferFractionSum, s4567aFlo.y, 0.0); 8*/
+  /*8 vec2 s6FWTFS = normalizeSafe(s6a) * divSafe(s6TransferFractionSum, s4567aFlo.z, 0.0); 8*/
+  /*8 vec2 s7FWTFS = normalizeSafe(s7a) * divSafe(s7TransferFractionSum, s4567aFlo.w, 0.0); 8*/
 
-  vec4 s01FWTFS = vec4(s0FWTFS.x, s0FWTFS.y, s1FWTFS.x, s1FWTFS.y);
-  vec4 s2_FWTFS = vec4(s2FWTFS.x, s2FWTFS.y, s_FWTFS.x, s_FWTFS.y);
-  /*8 vec4 s45FWTFS = vec4(s4FWTFS.x, s4FWTFS.y, s5FWTFS.x, s5FWTFS.y); 8*/
-  /*8 vec4 s67FWTFS = vec4(s6FWTFS.x, s6FWTFS.y, s7FWTFS.x, s7FWTFS.y); 8*/
+  vec4 s01FWTFS = vec4(s0FWTFS, s1FWTFS);
+  vec4 s2_FWTFS = vec4(s2FWTFS, s_FWTFS);
+  /*8 vec4 s45FWTFS = vec4(s4FWTFS, s5FWTFS); 8*/
+  /*8 vec4 s67FWTFS = vec4(s6FWTFS, s7FWTFS); 8*/
 
-  vec2 s0Given = (normalizeSafe(s0GivenDir) * s012_aFlo.x);
-  vec2 s1Given = (normalizeSafe(s1GivenDir) * s012_aFlo.y);
-  vec2 s2Given = (normalizeSafe(s2GivenDir) * s012_aFlo.z);
-  vec2 s_Given = (normalizeSafe(s_GivenDir) * s012_aFlo.w);
-  /*8 vec2 s4Given = (normalizeSafe(s4GivenDir) * s4567aFlo.x); 8*/
-  /*8 vec2 s5Given = (normalizeSafe(s5GivenDir) * s4567aFlo.y); 8*/
-  /*8 vec2 s6Given = (normalizeSafe(s6GivenDir) * s4567aFlo.z); 8*/
-  /*8 vec2 s7Given = (normalizeSafe(s7GivenDir) * s4567aFlo.w); 8*/
+  vec2 s0Given = normalizeSafe(s0GivenDir) * s012_aFlo.x;
+  vec2 s1Given = normalizeSafe(s1GivenDir) * s012_aFlo.y;
+  vec2 s2Given = normalizeSafe(s2GivenDir) * s012_aFlo.z;
+  vec2 s_Given = normalizeSafe(s_GivenDir) * s012_aFlo.w;
+  /*8 vec2 s4Given = normalizeSafe(s4GivenDir) * s4567aFlo.x; 8*/
+  /*8 vec2 s5Given = normalizeSafe(s5GivenDir) * s4567aFlo.y; 8*/
+  /*8 vec2 s6Given = normalizeSafe(s6GivenDir) * s4567aFlo.z; 8*/
+  /*8 vec2 s7Given = normalizeSafe(s7GivenDir) * s4567aFlo.w; 8*/
 
-  vec4 s01Given = vec4(s0Given.x, s0Given.y, s1Given.x, s1Given.y);
-  vec4 s2_Given = vec4(s2Given.x, s2Given.y, s_Given.x, s_Given.y);
-  /*8 vec4 s45Given = vec4(s4Given.x, s4Given.y, s5Given.x, s5Given.y); 8*/
-  /*8 vec4 s67Given = vec4(s6Given.x, s6Given.y, s7Given.x, s7Given.y); 8*/
+  vec4 s01Given = vec4(s0Given, s1Given);
+  vec4 s2_Given = vec4(s2Given, s_Given);
+  /*8 vec4 s45Given = vec4(s4Given, s5Given); 8*/
+  /*8 vec4 s67Given = vec4(s6Given, s7Given); 8*/
 
   s2_FWTFS.z = avgArc;
   s2_FWTFS.w = avgFlo;
@@ -492,25 +497,30 @@ void transferRun() {
   s012_bLen = divSafe(s012_bLen, sbLenTotal, 0.0);
   /*8 s4567bLen = divSafe(s4567bLen, sbLenTotal, 0.0); 8*/
 
-  float s0Attraction = dot(s012_bLen, am0x012_) /*8 + dot(s4567bLen, am0x4567) 8*/;
-  float s1Attraction = dot(s012_bLen, am1x012_) /*8 + dot(s4567bLen, am1x4567) 8*/;
-  float s2Attraction = dot(s012_bLen, am2x012_) /*8 + dot(s4567bLen, am2x4567) 8*/;
-  float s_Attraction = dot(s012_bLen, am_x012_) /*8 + dot(s4567bLen, am_x4567) 8*/;
-  /*8 float s4Attraction = dot(s012_bLen, am4x012_) + dot(s4567bLen, am4x4567); 8*/
-  /*8 float s5Attraction = dot(s012_bLen, am5x012_) + dot(s4567bLen, am5x4567); 8*/
-  /*8 float s6Attraction = dot(s012_bLen, am6x012_) + dot(s4567bLen, am6x4567); 8*/
-  /*8 float s7Attraction = dot(s012_bLen, am7x012_) + dot(s4567bLen, am7x4567); 8*/
-  float sAttractionSum =
-    sum(vec4(s0Attraction, s1Attraction, s2Attraction, s_Attraction)) /*8 +
-    sum(vec4(s4Attraction, s5Attraction, s6Attraction, s7Attraction)) 8*/;
-  s0Attraction = sAttractionSum == 0.0 ? 1.0 : s0Attraction;
-  s1Attraction = sAttractionSum == 0.0 ? 1.0 : s1Attraction;
-  s2Attraction = sAttractionSum == 0.0 ? 1.0 : s2Attraction;
-  s_Attraction = sAttractionSum == 0.0 ? 1.0 : s_Attraction;
-  /*8 s4Attraction = sAttractionSum == 0.0 ? 1.0 : s4Attraction; 8*/
-  /*8 s5Attraction = sAttractionSum == 0.0 ? 1.0 : s5Attraction; 8*/
-  /*8 s6Attraction = sAttractionSum == 0.0 ? 1.0 : s6Attraction; 8*/
-  /*8 s7Attraction = sAttractionSum == 0.0 ? 1.0 : s7Attraction; 8*/
+  float s0Attraction = dot(s012_bLen, max(am0x012_, 0.0)) /*8 + dot(s4567bLen, max(am0x4567, 0.0)) 8*/;
+  float s1Attraction = dot(s012_bLen, max(am1x012_, 0.0)) /*8 + dot(s4567bLen, max(am1x4567, 0.0)) 8*/;
+  float s2Attraction = dot(s012_bLen, max(am2x012_, 0.0)) /*8 + dot(s4567bLen, max(am2x4567, 0.0)) 8*/;
+  float s_Attraction = dot(s012_bLen, max(am_x012_, 0.0)) /*8 + dot(s4567bLen, max(am_x4567, 0.0)) 8*/;
+  /*8 float s4Attraction = dot(s012_bLen, max(am4x012_, 0.0)) + dot(s4567bLen, max(am4x4567, 0.0)); 8*/
+  /*8 float s5Attraction = dot(s012_bLen, max(am5x012_, 0.0)) + dot(s4567bLen, max(am5x4567, 0.0)); 8*/
+  /*8 float s6Attraction = dot(s012_bLen, max(am6x012_, 0.0)) + dot(s4567bLen, max(am6x4567, 0.0)); 8*/
+  /*8 float s7Attraction = dot(s012_bLen, max(am7x012_, 0.0)) + dot(s4567bLen, max(am7x4567, 0.0)); 8*/
+  s0Attraction = s0Attraction / (1.0 + dot(s012_bLen, max(-am0x012_, 0.0)) /*8 + dot(s4567bLen, max(-am0x4567, 0.0)) 8*/);
+  s1Attraction = s1Attraction / (1.0 + dot(s012_bLen, max(-am1x012_, 0.0)) /*8 + dot(s4567bLen, max(-am1x4567, 0.0)) 8*/);
+  s2Attraction = s2Attraction / (1.0 + dot(s012_bLen, max(-am2x012_, 0.0)) /*8 + dot(s4567bLen, max(-am2x4567, 0.0)) 8*/);
+  s_Attraction = s_Attraction / (1.0 + dot(s012_bLen, max(-am_x012_, 0.0)) /*8 + dot(s4567bLen, max(-am_x4567, 0.0)) 8*/);
+  /*8 s4Attraction = s4Attraction / (1.0 + dot(s012_bLen, max(-am4x012_, 0.0)) + dot(s4567bLen, max(-am4x4567, 0.0))); 8*/
+  /*8 s5Attraction = s5Attraction / (1.0 + dot(s012_bLen, max(-am5x012_, 0.0)) + dot(s4567bLen, max(-am5x4567, 0.0))); 8*/
+  /*8 s6Attraction = s6Attraction / (1.0 + dot(s012_bLen, max(-am6x012_, 0.0)) + dot(s4567bLen, max(-am6x4567, 0.0))); 8*/
+  /*8 s7Attraction = s7Attraction / (1.0 + dot(s012_bLen, max(-am7x012_, 0.0)) + dot(s4567bLen, max(-am7x4567, 0.0))); 8*/
+  s0Attraction = sbLenTotal == 0.0 ? 1.0 : s0Attraction;
+  s1Attraction = sbLenTotal == 0.0 ? 1.0 : s1Attraction;
+  s2Attraction = sbLenTotal == 0.0 ? 1.0 : s2Attraction;
+  s_Attraction = sbLenTotal == 0.0 ? 1.0 : s_Attraction;
+  /*8 s4Attraction = sbLenTotal == 0.0 ? 1.0 : s4Attraction; 8*/
+  /*8 s5Attraction = sbLenTotal == 0.0 ? 1.0 : s5Attraction; 8*/
+  /*8 s6Attraction = sbLenTotal == 0.0 ? 1.0 : s6Attraction; 8*/
+  /*8 s7Attraction = sbLenTotal == 0.0 ? 1.0 : s7Attraction; 8*/
 
   float s0FloLen = 0.0;
   float s1FloLen = 0.0;
@@ -552,14 +562,14 @@ void transferRun() {
     vec2 cAvg = c2_a.zw;
     c2_a.z = 0.0;
     c2_a.w = 0.0;
-    vec2 s0aFWTFS = vec2(c01a.x, c01a.y);
-    vec2 s1aFWTFS = vec2(c01a.z, c01a.w);
-    vec2 s2aFWTFS = vec2(c2_a.x, c2_a.y);
-    vec2 s_aFWTFS = vec2(c2_a.z, c2_a.w);
-    /*8 vec2 s4aFWTFS = vec2(c45a.x, c45a.y); 8*/
-    /*8 vec2 s5aFWTFS = vec2(c45a.z, c45a.w); 8*/
-    /*8 vec2 s6aFWTFS = vec2(c67a.x, c67a.y); 8*/
-    /*8 vec2 s7aFWTFS = vec2(c67a.z, c67a.w); 8*/
+    vec2 s0aFWTFS = c01a.xy;
+    vec2 s1aFWTFS = c01a.zw;
+    vec2 s2aFWTFS = c2_a.xy;
+    vec2 s_aFWTFS = c2_a.zw;
+    /*8 vec2 s4aFWTFS = c45a.xy; 8*/
+    /*8 vec2 s5aFWTFS = c45a.zw; 8*/
+    /*8 vec2 s6aFWTFS = c67a.xy; 8*/
+    /*8 vec2 s7aFWTFS = c67a.zw; 8*/
 
     vec4 s012_Bisector = vec4(
       atan(s0aFWTFS.y, s0aFWTFS.x),
@@ -573,14 +583,14 @@ void transferRun() {
       atan(s6aFWTFS.y, s6aFWTFS.x),
       atan(s7aFWTFS.y, s7aFWTFS.x)
     ); 8*/
-    float avgArc = texture(texture6, vvUV).x; // avgArcAndFlo
+    float avgArc = cAvg.x; // avgArcAndFlo
     vec4 s012_aArc = avgArc == -1.0 ? uArc012_ : mix(uArc012_, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending012_);
     /*8 vec4 s4567aArc = avgArc == -1.0 ? uArc4567 : mix(uArc4567, vec4(avgArc, avgArc, avgArc, avgArc), uArcBlending4567); 8*/
 
-    vec4 s012_aLoBound = mod(((s012_Bisector - s012_aArc) + PI2), PI2);
-    /*8 vec4 s4567aLoBound = mod(((s4567Bisector - s4567aArc) + PI2), PI2); 8*/
-    vec4 s012_aHiBound = mod(((s012_Bisector + s012_aArc) + PI2), PI2);
-    /*8 vec4 s4567aHiBound = mod(((s4567Bisector + s4567aArc) + PI2), PI2); 8*/
+    vec4 s012_aLoBound = mod(s012_Bisector - s012_aArc + PI2, PI2);
+    /*8 vec4 s4567aLoBound = mod(s4567Bisector - s4567aArc + PI2, PI2); 8*/
+    vec4 s012_aHiBound = mod(s012_Bisector + s012_aArc + PI2, PI2);
+    /*8 vec4 s4567aHiBound = mod(s4567Bisector + s4567aArc + PI2, PI2); 8*/
     s012_aHiBound = vec4(
       s012_aLoBound.x > (s012_aHiBound.x - epsilon) ? s012_aHiBound.x + PI2 : s012_aHiBound.x,
       s012_aLoBound.y > (s012_aHiBound.y - epsilon) ? s012_aHiBound.y + PI2 : s012_aHiBound.y,
@@ -594,14 +604,14 @@ void transferRun() {
       s4567aLoBound.w > (s4567aHiBound.w - epsilon) ? s4567aHiBound.w + PI2 : s4567aHiBound.w
     ); 8*/
 
-    vec2 s0TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.x, s012_aHiBound.x) * s0Attraction);
-    vec2 s1TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.y, s012_aHiBound.y) * s1Attraction);
-    vec2 s2TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.z, s012_aHiBound.z) * s2Attraction);
-    vec2 s_TransferFraction = (arcOverlap(loBound, hiBound, s012_aLoBound.w, s012_aHiBound.w) * s_Attraction);
-    /*8 vec2 s4TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.x, s4567aHiBound.x) * s4Attraction); 8*/
-    /*8 vec2 s5TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.y, s4567aHiBound.y) * s5Attraction); 8*/
-    /*8 vec2 s6TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.z, s4567aHiBound.z) * s6Attraction); 8*/
-    /*8 vec2 s7TransferFraction = (arcOverlap(loBound, hiBound, s4567aLoBound.w, s4567aHiBound.w) * s7Attraction); 8*/
+    vec2 s0TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.x, s012_aHiBound.x) * s0Attraction;
+    vec2 s1TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.y, s012_aHiBound.y) * s1Attraction;
+    vec2 s2TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.z, s012_aHiBound.z) * s2Attraction;
+    vec2 s_TransferFraction = arcOverlap(loBound, hiBound, s012_aLoBound.w, s012_aHiBound.w) * s_Attraction;
+    /*8 vec2 s4TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.x, s4567aHiBound.x) * s4Attraction; 8*/
+    /*8 vec2 s5TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.y, s4567aHiBound.y) * s5Attraction; 8*/
+    /*8 vec2 s6TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.z, s4567aHiBound.z) * s6Attraction; 8*/
+    /*8 vec2 s7TransferFraction = arcOverlap(loBound, hiBound, s4567aLoBound.w, s4567aHiBound.w) * s7Attraction; 8*/
 
     vec2 s0FloFraction = divSafe(s0TransferFraction, length(s0aFWTFS), 0.0);
     vec2 s1FloFraction = divSafe(s1TransferFraction, length(s1aFWTFS), 0.0);
@@ -612,23 +622,23 @@ void transferRun() {
     /*8 vec2 s6FloFraction = divSafe(s6TransferFraction, length(s6aFWTFS), 0.0); 8*/
     /*8 vec2 s7FloFraction = divSafe(s7TransferFraction, length(s7aFWTFS), 0.0); 8*/
 
-    s0FloDir = (s0FloDir + s0FloFraction);
-    s1FloDir = (s1FloDir + s1FloFraction);
-    s2FloDir = (s2FloDir + s2FloFraction);
-    s_FloDir = (s_FloDir + s_FloFraction);
-    /*8 s4FloDir = (s4FloDir + s4FloFraction); 8*/
-    /*8 s5FloDir = (s5FloDir + s5FloFraction); 8*/
-    /*8 s6FloDir = (s6FloDir + s6FloFraction); 8*/
-    /*8 s7FloDir = (s7FloDir + s7FloFraction); 8*/
+    s0FloDir = s0FloDir + s0FloFraction;
+    s1FloDir = s1FloDir + s1FloFraction;
+    s2FloDir = s2FloDir + s2FloFraction;
+    s_FloDir = s_FloDir + s_FloFraction;
+    /*8 s4FloDir = s4FloDir + s4FloFraction; 8*/
+    /*8 s5FloDir = s5FloDir + s5FloFraction; 8*/
+    /*8 s6FloDir = s6FloDir + s6FloFraction; 8*/
+    /*8 s7FloDir = s7FloDir + s7FloFraction; 8*/
 
-    s0FloLen = (s0FloLen + length(s0FloFraction));
-    s1FloLen = (s1FloLen + length(s1FloFraction));
-    s2FloLen = (s2FloLen + length(s2FloFraction));
-    s_FloLen = (s_FloLen + length(s_FloFraction));
-    /*8 s4FloLen = (s4FloLen + length(s4FloFraction)); 8*/
-    /*8 s5FloLen = (s5FloLen + length(s5FloFraction)); 8*/
-    /*8 s6FloLen = (s6FloLen + length(s6FloFraction)); 8*/
-    /*8 s7FloLen = (s7FloLen + length(s7FloFraction)); 8*/
+    s0FloLen = s0FloLen + length(s0FloFraction);
+    s1FloLen = s1FloLen + length(s1FloFraction);
+    s2FloLen = s2FloLen + length(s2FloFraction);
+    s_FloLen = s_FloLen + length(s_FloFraction);
+    /*8 s4FloLen = s4FloLen + length(s4FloFraction); 8*/
+    /*8 s5FloLen = s5FloLen + length(s5FloFraction); 8*/
+    /*8 s6FloLen = s6FloLen + length(s6FloFraction); 8*/
+    /*8 s7FloLen = s7FloLen + length(s7FloFraction); 8*/
 
     if (hiBound > PI2) {
       break;
@@ -639,50 +649,50 @@ void transferRun() {
   vec4 c2_Given = texture(texture5, vUV); // substance2_Given
   vec4 c45Given = texture(texture10, vUV); // substance45Given
   vec4 c67Given = texture(texture11, vUV); // substance67Given
-  vec2 s0Given = vec2(c01Given.x, c01Given.y);
-  vec2 s1Given = vec2(c01Given.z, c01Given.w);
-  vec2 s2Given = vec2(c2_Given.x, c2_Given.y);
-  vec2 s_Given = vec2(c2_Given.z, c2_Given.w);
-  /*8 vec2 s4Given = vec2(c45Given.x, c45Given.y); 8*/
-  /*8 vec2 s5Given = vec2(c45Given.z, c45Given.w); 8*/
-  /*8 vec2 s6Given = vec2(c67Given.x, c67Given.y); 8*/
-  /*8 vec2 s7Given = vec2(c67Given.z, c67Given.w); 8*/
+  vec2 s0Given = c01Given.xy;
+  vec2 s1Given = c01Given.zw;
+  vec2 s2Given = c2_Given.xy;
+  vec2 s_Given = c2_Given.zw;
+  /*8 vec2 s4Given = c45Given.xy; 8*/
+  /*8 vec2 s5Given = c45Given.zw; 8*/
+  /*8 vec2 s6Given = c67Given.xy; 8*/
+  /*8 vec2 s7Given = c67Given.zw; 8*/
 
-  vec2 s0Received = (normalizeSafe(s0FloDir) * s0FloLen);
-  vec2 s1Received = (normalizeSafe(s1FloDir) * s1FloLen);
-  vec2 s2Received = (normalizeSafe(s2FloDir) * s2FloLen);
-  vec2 s_Received = (normalizeSafe(s_FloDir) * s_FloLen);
-  /*8 vec2 s4Received = (normalizeSafe(s4FloDir) * s4FloLen); 8*/
-  /*8 vec2 s5Received = (normalizeSafe(s5FloDir) * s5FloLen); 8*/
-  /*8 vec2 s6Received = (normalizeSafe(s6FloDir) * s6FloLen); 8*/
-  /*8 vec2 s7Received = (normalizeSafe(s7FloDir) * s7FloLen); 8*/
+  vec2 s0Received = normalizeSafe(s0FloDir) * s0FloLen;
+  vec2 s1Received = normalizeSafe(s1FloDir) * s1FloLen;
+  vec2 s2Received = normalizeSafe(s2FloDir) * s2FloLen;
+  vec2 s_Received = normalizeSafe(s_FloDir) * s_FloLen;
+  /*8 vec2 s4Received = normalizeSafe(s4FloDir) * s4FloLen; 8*/
+  /*8 vec2 s5Received = normalizeSafe(s5FloDir) * s5FloLen; 8*/
+  /*8 vec2 s6Received = normalizeSafe(s6FloDir) * s6FloLen; 8*/
+  /*8 vec2 s7Received = normalizeSafe(s7FloDir) * s7FloLen; 8*/
 
   float avgFlo = texture(texture3, vUV).w; // avgArcAndFlo
   vec4 s012_bFlo = avgFlo == -1.0 ? uFlo012_ : mix(uFlo012_, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending012_);
   /*8 vec4 s4567bFlo = avgFlo == -1.0 ? uFlo4567 : mix(uFlo4567, vec4(avgFlo, avgFlo, avgFlo, avgFlo), uFloBlending4567); 8*/
 
-  vec2 s0Remaining = (s0b * (1.0 - s012_bFlo.x));
-  vec2 s1Remaining = (s1b * (1.0 - s012_bFlo.y));
-  vec2 s2Remaining = (s2b * (1.0 - s012_bFlo.z));
-  vec2 s_Remaining = (s_b * (1.0 - s012_bFlo.w));
-  /*8 vec2 s4Remaining = (s4b * (1.0 - s4567bFlo.x)); 8*/
-  /*8 vec2 s5Remaining = (s5b * (1.0 - s4567bFlo.y)); 8*/
-  /*8 vec2 s6Remaining = (s6b * (1.0 - s4567bFlo.z)); 8*/
-  /*8 vec2 s7Remaining = (s7b * (1.0 - s4567bFlo.w)); 8*/
+  vec2 s0Remaining = s0b * (1.0 - s012_bFlo.x);
+  vec2 s1Remaining = s1b * (1.0 - s012_bFlo.y);
+  vec2 s2Remaining = s2b * (1.0 - s012_bFlo.z);
+  vec2 s_Remaining = s_b * (1.0 - s012_bFlo.w);
+  /*8 vec2 s4Remaining = s4b * (1.0 - s4567bFlo.x); 8*/
+  /*8 vec2 s5Remaining = s5b * (1.0 - s4567bFlo.y); 8*/
+  /*8 vec2 s6Remaining = s6b * (1.0 - s4567bFlo.z); 8*/
+  /*8 vec2 s7Remaining = s7b * (1.0 - s4567bFlo.w); 8*/
 
-  vec2 s0 = (normalizeSafe(((s0Given + s0Received) + s0Remaining)) * (length(s0Received) + length(s0Remaining)));
-  vec2 s1 = (normalizeSafe(((s1Given + s1Received) + s1Remaining)) * (length(s1Received) + length(s1Remaining)));
-  vec2 s2 = (normalizeSafe(((s2Given + s2Received) + s2Remaining)) * (length(s2Received) + length(s2Remaining)));
-  vec2 s_ = (normalizeSafe(((s_Given + s_Received) + s_Remaining)) * (length(s_Received) + length(s_Remaining)));
-  /*8 vec2 s4 = (normalizeSafe(((s4Given + s4Received) + s4Remaining)) * (length(s4Received) + length(s4Remaining))); 8*/
-  /*8 vec2 s5 = (normalizeSafe(((s5Given + s5Received) + s5Remaining)) * (length(s5Received) + length(s5Remaining))); 8*/
-  /*8 vec2 s6 = (normalizeSafe(((s6Given + s6Received) + s6Remaining)) * (length(s6Received) + length(s6Remaining))); 8*/
-  /*8 vec2 s7 = (normalizeSafe(((s7Given + s7Received) + s7Remaining)) * (length(s7Received) + length(s7Remaining))); 8*/
+  vec2 s0 = normalizeSafe(s0Given + s0Received + s0Remaining) * (length(s0Received) + length(s0Remaining));
+  vec2 s1 = normalizeSafe(s1Given + s1Received + s1Remaining) * (length(s1Received) + length(s1Remaining));
+  vec2 s2 = normalizeSafe(s2Given + s2Received + s2Remaining) * (length(s2Received) + length(s2Remaining));
+  vec2 s_ = normalizeSafe(s_Given + s_Received + s_Remaining) * (length(s_Received) + length(s_Remaining));
+  /*8 vec2 s4 = normalizeSafe(s4Given + s4Received + s4Remaining) * (length(s4Received) + length(s4Remaining)); 8*/
+  /*8 vec2 s5 = normalizeSafe(s5Given + s5Received + s5Remaining) * (length(s5Received) + length(s5Remaining)); 8*/
+  /*8 vec2 s6 = normalizeSafe(s6Given + s6Received + s6Remaining) * (length(s6Received) + length(s6Remaining)); 8*/
+  /*8 vec2 s7 = normalizeSafe(s7Given + s7Received + s7Remaining) * (length(s7Received) + length(s7Remaining)); 8*/
 
-  vec4 s01 = vec4(s0.x, s0.y, s1.x, s1.y);
-  vec4 s2_ = vec4(s2.x, s2.y, s_.x, s_.y);
-  /*8 vec4 s45 = vec4(s4.x, s4.y, s5.x, s5.y); 8*/
-  /*8 vec4 s67 = vec4(s6.x, s6.y, s7.x, s7.y); 8*/
+  vec4 s01 = vec4(s0, s1);
+  vec4 s2_ = vec4(s2, s_);
+  /*8 vec4 s45 = vec4(s4, s5); 8*/
+  /*8 vec4 s67 = vec4(s6, s7); 8*/
 
   fragColor0 = fill(s01);
   fragColor1 = fill(s2_);
@@ -719,19 +729,19 @@ void substanceReact() {
   vec4 ca4567 = texture(texture3, vUV); // address4567
 
   vec4 initial0 = vec4(
-    length(vec2(cs01.x, cs01.y)),
-    length(vec2(cs01.z, cs01.w)),
-    length(vec2(cs23.x, cs23.y)),
-    length(vec2(cs23.z, cs23.w))
+    length(cs01.xy),
+    length(cs01.zw),
+    length(cs23.xy),
+    length(cs23.zw)
   );
   vec4 initial1 = vec4(
-    length(vec2(cs45.x, cs45.y)),
-    length(vec2(cs45.z, cs45.w)),
-    length(vec2(cs67.x, cs67.y)),
-    length(vec2(cs67.z, cs67.w))
+    length(cs45.xy),
+    length(cs45.zw),
+    length(cs67.xy),
+    length(cs67.zw)
   );
-  vec4 initial2 = vec4(max(ca0123.x, 0.0), max(ca0123.y, 0.0), max(ca0123.z, 0.0), max(ca0123.w, 0.0));
-  vec4 initial3 = vec4(max(ca4567.x, 0.0), max(ca4567.y, 0.0), max(ca4567.z, 0.0), max(ca4567.w, 0.0));
+  vec4 initial2 = max(ca0123, 0.0);
+  vec4 initial3 = max(ca4567, 0.0);
 
   vec4 input0 = initial0;
   vec4 input1 = initial1;
@@ -756,10 +766,10 @@ void substanceReact() {
   vec2 i1dy = normalizeSafe(cs45.zw);
   vec2 i1dz = normalizeSafe(cs67.xy);
   vec2 i1dw = normalizeSafe(cs67.zw);
-  vec4 s0123X = vec4(cs01.x, cs01.z, cs23.x, cs23.z);
-  vec4 s4567X = vec4(cs45.x, cs45.z, cs67.x, cs67.z);
-  vec4 s0123Y = vec4(cs01.y, cs01.w, cs23.y, cs23.w);
-  vec4 s4567Y = vec4(cs45.y, cs45.w, cs67.y, cs67.w);
+  vec4 s0123X = vec4(cs01.xz, cs23.xz);
+  vec4 s4567X = vec4(cs45.xz, cs67.xz);
+  vec4 s0123Y = vec4(cs01.yw, cs23.yw);
+  vec4 s4567Y = vec4(cs45.yw, cs67.yw);
   vec2 avgDir = normalizeSafe(
     vec2(
       dot(s0123X, uDirWeight012_) + dot(s4567X, uDirWeight4567),
@@ -803,26 +813,26 @@ void substanceReact() {
         );
         float inputAvailability = min(min(min(iaVec.x, iaVec.y), min(iaVec.z, iaVec.w)), bigilon);
         float reactionSpeed = inputAvailability * rWeight;
-        i0 = (i0 + (r.input0 * reactionSpeed));
-        i1 = (i1 + (r.input1 * reactionSpeed));
-        i2 = (i2 + (r.input2 * reactionSpeed));
-        i3 = (i3 + (r.input3 * reactionSpeed));
+        i0 = i0 + r.input0 * reactionSpeed;
+        i1 = i1 + r.input1 * reactionSpeed;
+        i2 = i2 + r.input2 * reactionSpeed;
+        i3 = i3 + r.input3 * reactionSpeed;
         vec2 direction = normalizeSafe(mix(
           i0dx * r.input0.x + i0dy * r.input0.y + i0dz * r.input0.z + i0dw * r.input0.w +
           i1dx * r.input1.x + i1dy * r.input1.y + i1dz * r.input1.z + i1dw * r.input1.w,
           avgDir,
           epsilon
         ));
-        o0x = o0x + (r.output0.x * direction * reactionSpeed);
-        o0y = o0y + (r.output0.y * direction * reactionSpeed);
-        o0z = o0z + (r.output0.z * direction * reactionSpeed);
-        o0w = o0w + (r.output0.w * direction * reactionSpeed);
-        o1x = o1x + (r.output1.x * direction * reactionSpeed);
-        o1y = o1y + (r.output1.y * direction * reactionSpeed);
-        o1z = o1z + (r.output1.z * direction * reactionSpeed);
-        o1w = o1w + (r.output1.w * direction * reactionSpeed);
-        o2 = (o2 + (r.output2 * reactionSpeed));
-        o3 = (o3 + (r.output3 * reactionSpeed));
+        o0x = o0x + r.output0.x * direction * reactionSpeed;
+        o0y = o0y + r.output0.y * direction * reactionSpeed;
+        o0z = o0z + r.output0.z * direction * reactionSpeed;
+        o0w = o0w + r.output0.w * direction * reactionSpeed;
+        o1x = o1x + r.output1.x * direction * reactionSpeed;
+        o1y = o1y + r.output1.y * direction * reactionSpeed;
+        o1z = o1z + r.output1.z * direction * reactionSpeed;
+        o1w = o1w + r.output1.w * direction * reactionSpeed;
+        o2 = o2 + r.output2 * reactionSpeed;
+        o3 = o3 + r.output3 * reactionSpeed;
       }
     }
     vec4 scalebackVec = max(
@@ -833,20 +843,20 @@ void substanceReact() {
       max(max(scalebackVec.x, scalebackVec.y), max(scalebackVec.z, scalebackVec.w)),
       1.0
     );
-    input0 = (input0 - (i0 * scaleback));
-    input1 = (input1 - (i1 * scaleback));
-    input2 = (input2 - (i2 * scaleback));
-    input3 = (input3 - (i3 * scaleback));
-    output0x = (output0x + (o0x * scaleback));
-    output0y = (output0y + (o0y * scaleback));
-    output0z = (output0z + (o0z * scaleback));
-    output0w = (output0w + (o0w * scaleback));
-    output1x = (output1x + (o1x * scaleback));
-    output1y = (output1y + (o1y * scaleback));
-    output1z = (output1z + (o1z * scaleback));
-    output1w = (output1w + (o1w * scaleback));
-    output2 = (output2 + (o2 * scaleback));
-    output3 = (output3 + (o3 * scaleback));
+    input0 = input0 - i0 * scaleback;
+    input1 = input1 - i1 * scaleback;
+    input2 = input2 - i2 * scaleback;
+    input3 = input3 - i3 * scaleback;
+    output0x = output0x + o0x * scaleback;
+    output0y = output0y + o0y * scaleback;
+    output0z = output0z + o0z * scaleback;
+    output0w = output0w + o0w * scaleback;
+    output1x = output1x + o1x * scaleback;
+    output1y = output1y + o1y * scaleback;
+    output1z = output1z + o1z * scaleback;
+    output1w = output1w + o1w * scaleback;
+    output2 = output2 + o2 * scaleback;
+    output3 = output3 + o3 * scaleback;
     if (scaleback == 1.0 || scaleback < epsilon) {
       break;
     }
@@ -886,19 +896,19 @@ void substanceReact() {
   float a6 = initial3.z > 0.0 ? max(input3.z, epsilon) : -output3.z;
   float a7 = initial3.w > 0.0 ? max(input3.w, epsilon) : -output3.w;
 
-  fragColor0 = fill(vec4(s0.x, s0.y, s1.x, s1.y));
-  fragColor1 = fill(vec4(s2.x, s2.y, s3.x, s3.y));
+  fragColor0 = fill(vec4(s0, s1));
+  fragColor1 = fill(vec4(s2, s3));
   fragColor2 = fill(vec4(a0, a1, a2, a3));
   fragColor3 = fill(vec4(a4, a5, a6, a7));
-  fragColor4 = fill(vec4(s4.x, s4.y, s5.x, s5.y));
-  fragColor5 = fill(vec4(s6.x, s6.y, s7.x, s7.y));
+  fragColor4 = fill(vec4(s4, s5));
+  fragColor5 = fill(vec4(s6, s7));
 }
 
 void addressPrepare() {
   vec4 ca0123 = texture(texture0, vUV); // address0123
   vec4 ca4567 = texture(texture1, vUV); // address4567
-  fragColor0 = max((ca0123 * -1.0), 0.0);
-  fragColor1 = max((ca4567 * -1.0), 0.0);
+  fragColor0 = max(-ca0123, 0.0);
+  fragColor1 = max(-ca4567, 0.0);
 }
 
 void addressRun() {

@@ -1,0 +1,94 @@
+// mechanical
+digraph G {
+  rankdir=LR;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white shape=rectangle];
+  edge [color=white];
+  a -> b -> c -> d -> e -> f -> h;
+  e -> g -> h;
+  a [shape=oval];
+}
+
+// complex (diffusion introduction)
+digraph G {
+  rankdir=LR;
+  ratio=1;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white];
+  edge [color=white];
+  left -> equilbrium;
+  right -> equilbrium;
+}
+
+// complex
+digraph G {
+  rankdir=LR;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white];
+  edge [color=white];
+  a -> c -> d -> e -> g;
+  b -> c -> g;
+  f -> h;
+  f -> g;
+  c -> f [constraint=false];
+  c -> h -> i;
+  b -> d;
+  d -> f;
+}
+
+// chaotic
+digraph G {
+  rankdir=LR;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white];
+  edge [color=white];
+  a -> c -> d -> e -> g [style=invis];
+  b -> c -> g  [style=invis];
+  b -> d  [style=invis];
+  d -> e
+  d -> f;
+  f -> h  [style=invis];
+  f -> g;
+  c -> h  [style=invis];
+  h -> i  [style=invis];
+  h -> j  [style=invis];
+  e -> j -> k  [style=invis];
+  e -> j -> l  [style=invis];
+  j -> m;
+  c -> k  [style=invis];
+}
+
+// aristotle
+digraph G {
+  rankdir=LR;
+  ratio=1.5;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor="#999999" color="#ffffff5f" opacity=0.5];
+  edge [color="#444444"];
+  c -> b;
+  d -> b;
+  a -> b [color=white];
+  e -> b;
+  f -> b;
+  a [fontcolor=white color=white];
+  b [fontcolor=white color=white];
+}
+
+// aristotle 2
+digraph G {
+  rankdir=LR;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white shape=rectangle];
+  edge [color=white];
+  "Expectation\n(father)" -> "Desire\n(Alexander)" -> "Walking\n(Alexander)";
+}
+
+// jesus
+digraph G {
+  rankdir=LR;
+  graph [bgcolor=black];
+  node [fontsize=20 fontcolor=white color=white];
+  edge [color=white];
+  "Romans\n(Mechanics)" -> Jesus
+  "Jews\n(Monothiesm)" -> Jesus
+}

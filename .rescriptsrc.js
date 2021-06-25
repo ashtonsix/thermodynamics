@@ -14,6 +14,11 @@ const transform = (match) => ({
       exclude: [/node_modules/],
       use: ['raw-loader', 'glslify-loader'],
     },
+    {
+      test: /\.(svg)$/,
+      exclude: [/node_modules/],
+      use: ['raw-loader'],
+    },
     ...match.oneOf.slice(-1),
   ],
 })

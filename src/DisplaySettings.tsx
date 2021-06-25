@@ -12,15 +12,15 @@ import {
 import jsonStringify from 'json-stable-stringify'
 
 export const defaultValues = {
-  magnification: 4,
-  iterationsPerSecond: 50,
+  magnification: 1,
+  iterationsPerSecond: 500,
   brightness: 0,
-  contrast: 16,
+  contrast: 18,
   scheme: 'gradient', // gradient, softmax
   // energy, direction, change in energy, similarity to neighbours (direction only), similarity to neighbours (direction and energy)
   quantity: 'energy',
   chroma: 'HPLuv',
-  dynamicRange: 'linear',
+  dynamicRange: 'logarithmic',
   gradient: {
     interpolation: 'palette',
     palette: {
@@ -50,6 +50,9 @@ export const defaultValues = {
     softmaxHue: [0, 3, 6, 1, 4, 7, 2, 8, 10][i],
   })),
 }
+
+defaultValues.substances[1].active = false
+defaultValues.substances[2].alpha = true
 
 const mix = (a, b, m) => a * (1 - m) + b * m
 const mixRing = (a, b, m, r) => {

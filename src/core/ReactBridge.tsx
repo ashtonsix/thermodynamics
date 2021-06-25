@@ -39,7 +39,7 @@ const ReactSim = ({config, texturePack, playing}) => {
 
       await sim.cycle()
     },
-    playing ? 1000 / config.display.iterationsPerSecond : 0
+    playing ? 1000 / config.display.iterationsPerSecond : null
   )
 
   return (

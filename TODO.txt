@@ -10,7 +10,7 @@ double slit experiment
 for js: https://neil.fraser.name/software/JS-Interpreter/docs.html
 for quantum entanglement: https://www.geogebra.org/3d
 for documentation: https://github.com/benweet/stackedit
-
+for math: https://www.mathcha.io/
 
 
 ability to save/load simulations

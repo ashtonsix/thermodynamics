@@ -267,42 +267,43 @@ void main() {
     }
   }
 
-  s0 = s0 * uRelativeBrightness0123.x;
-  s1 = s1 * uRelativeBrightness0123.y;
-  s2 = s2 * uRelativeBrightness0123.z;
-  s3 = s3 * uRelativeBrightness0123.w;
-  s4 = s4 * uRelativeBrightness4567.x;
-  s5 = s5 * uRelativeBrightness4567.y;
-  s6 = s6 * uRelativeBrightness4567.z;
-  s7 = s7 * uRelativeBrightness4567.w;
-  ah = ah * uRelativeBrightnessHM.x;
-  am = am * uRelativeBrightnessHM.y;
-
   int iActive = int(uActive);
+
+  s0 = (iActive & 1) == 1 ? s0 * uRelativeBrightness0123.x : 0.0;
+  s1 = (iActive & 2) == 2 ? s1 * uRelativeBrightness0123.y : 0.0;
+  s2 = (iActive & 4) == 4 ? s2 * uRelativeBrightness0123.z : 0.0;
+  s3 = (iActive & 8) == 8 ? s3 * uRelativeBrightness0123.w : 0.0;
+  s4 = (iActive & 16) == 16 ? s4 * uRelativeBrightness4567.x : 0.0;
+  s5 = (iActive & 32) == 32 ? s5 * uRelativeBrightness4567.y : 0.0;
+  s6 = (iActive & 64) == 64 ? s6 * uRelativeBrightness4567.z : 0.0;
+  s7 = (iActive & 128) == 128 ? s7 * uRelativeBrightness4567.w : 0.0;
+  ah = (iActive & 256) == 256 ? ah * uRelativeBrightnessHM.x : 0.0;
+  am = (iActive & 512) == 512 ? am * uRelativeBrightnessHM.y : 0.0;
+
   int iAlpha = int(uAlpha);
 
   float luminance =
-    ((iActive & 1) == 1 && (iAlpha & 1) == 0 ? s0 : 0.0) +
-    ((iActive & 2) == 2 && (iAlpha & 2) == 0 ? s1 : 0.0) +
-    ((iActive & 4) == 4 && (iAlpha & 4) == 0 ? s2 : 0.0) +
-    ((iActive & 8) == 8 && (iAlpha & 8) == 0 ? s3 : 0.0) +
-    ((iActive & 16) == 16 && (iAlpha & 16) == 0 ? s4 : 0.0) +
-    ((iActive & 32) == 32 && (iAlpha & 32) == 0 ? s5 : 0.0) +
-    ((iActive & 64) == 64 && (iAlpha & 64) == 0 ? s6 : 0.0) +
-    ((iActive & 128) == 128 && (iAlpha & 128) == 0 ? s7 : 0.0) +
-    ((iActive & 256) == 256 && (iAlpha & 256) == 0 ? ah : 0.0) +
-    ((iActive & 512) == 512 && (iAlpha & 512) == 0 ? am : 0.0);
+    ((iAlpha & 1) == 0 ? s0 : 0.0) +
+    ((iAlpha & 2) == 0 ? s1 : 0.0) +
+    ((iAlpha & 4) == 0 ? s2 : 0.0) +
+    ((iAlpha & 8) == 0 ? s3 : 0.0) +
+    ((iAlpha & 16) == 0 ? s4 : 0.0) +
+    ((iAlpha & 32) == 0 ? s5 : 0.0) +
+    ((iAlpha & 64) == 0 ? s6 : 0.0) +
+    ((iAlpha & 128) == 0 ? s7 : 0.0) +
+    ((iAlpha & 256) == 0 ? ah : 0.0) +
+    ((iAlpha & 512) == 0 ? am : 0.0);
   float alpha =
-    ((iActive & 1) == 1 && (iAlpha & 1) == 1 ? s0 : 0.0) +
-    ((iActive & 2) == 2 && (iAlpha & 2) == 2 ? s1 : 0.0) +
-    ((iActive & 4) == 4 && (iAlpha & 4) == 4 ? s2 : 0.0) +
-    ((iActive & 8) == 8 && (iAlpha & 8) == 8 ? s3 : 0.0) +
-    ((iActive & 16) == 16 && (iAlpha & 16) == 16 ? s4 : 0.0) +
-    ((iActive & 32) == 32 && (iAlpha & 32) == 32 ? s5 : 0.0) +
-    ((iActive & 64) == 64 && (iAlpha & 64) == 64 ? s6 : 0.0) +
-    ((iActive & 128) == 128 && (iAlpha & 128) == 128 ? s7 : 0.0) +
-    ((iActive & 256) == 256 && (iAlpha & 256) == 256 ? ah : 0.0) +
-    ((iActive & 512) == 512 && (iAlpha & 512) == 512 ? am : 0.0);
+    ((iAlpha & 1) == 1 ? s0 : 0.0) +
+    ((iAlpha & 2) == 2 ? s1 : 0.0) +
+    ((iAlpha & 4) == 4 ? s2 : 0.0) +
+    ((iAlpha & 8) == 8 ? s3 : 0.0) +
+    ((iAlpha & 16) == 16 ? s4 : 0.0) +
+    ((iAlpha & 32) == 32 ? s5 : 0.0) +
+    ((iAlpha & 64) == 64 ? s6 : 0.0) +
+    ((iAlpha & 128) == 128 ? s7 : 0.0) +
+    ((iAlpha & 256) == 256 ? ah : 0.0) +
+    ((iAlpha & 512) == 512 ? am : 0.0);
   alpha = divSafe(alpha, (alpha + luminance), 0.0);
   float brightness = uBrightness;
   float contrast = uQuantity == 2.0 ? pow(uContrast, 3.0) : uContrast;
@@ -341,16 +342,16 @@ void main() {
   }
   if (uScheme == 1.0 /* softmax */) {
     int iHot = int(uHot);
-    float es0 = (iActive & 1) == 1 ? pow(10.0, s0) : 0.0;
-    float es1 = (iActive & 2) == 2 ? pow(10.0, s1) : 0.0;
-    float es2 = (iActive & 4) == 4 ? pow(10.0, s2) : 0.0;
-    float es3 = (iActive & 8) == 8 ? pow(10.0, s3) : 0.0;
-    float es4 = (iActive & 16) == 16 ? pow(10.0, s4) : 0.0;
-    float es5 = (iActive & 32) == 32 ? pow(10.0, s5) : 0.0;
-    float es6 = (iActive & 64) == 64 ? pow(10.0, s6) : 0.0;
-    float es7 = (iActive & 128) == 128 ? pow(10.0, s7) : 0.0;
-    float eah = (iActive & 256) == 256 ? pow(10.0, ah) : 0.0;
-    float eam = (iActive & 512) == 512 ? pow(10.0, am) : 0.0;
+    float es0 = (iActive & 1) == 1 ? pow(2.0, 10.0 * s0) : 0.0;
+    float es1 = (iActive & 2) == 2 ? pow(2.0, 10.0 * s1) : 0.0;
+    float es2 = (iActive & 4) == 4 ? pow(2.0, 10.0 * s2) : 0.0;
+    float es3 = (iActive & 8) == 8 ? pow(2.0, 10.0 * s3) : 0.0;
+    float es4 = (iActive & 16) == 16 ? pow(2.0, 10.0 * s4) : 0.0;
+    float es5 = (iActive & 32) == 32 ? pow(2.0, 10.0 * s5) : 0.0;
+    float es6 = (iActive & 64) == 64 ? pow(2.0, 10.0 * s6) : 0.0;
+    float es7 = (iActive & 128) == 128 ? pow(2.0, 10.0 * s7) : 0.0;
+    float eah = (iActive & 256) == 256 ? pow(2.0, 10.0 * ah) : 0.0;
+    float eam = (iActive & 512) == 512 ? pow(2.0, 10.0 * am) : 0.0;
     float eSum = sum(vec4(es0, es1, es2, es3)) + sum(vec4(es4, es5, es6, es7)) + eah + eam;
     int biggest = 0;
     int secondBiggest = 0;

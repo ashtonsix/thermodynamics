@@ -195,6 +195,7 @@ const cycle = ({cellEnergy, flowOrientation}, flow) => {
 
 const DiffusionDemo = () => {
   const [playing, setPlaying] = useState(false)
+  const [fastMode, setFastMode] = useState(false)
   const [cellNumber, setCellNumber] = useState(2)
   const [flow, setFlow] = useState(0.4)
   const [flowOrientation, setFlowOrientation] = useState('UNIFORM')
@@ -204,9 +205,12 @@ const DiffusionDemo = () => {
     flowOrientation: ['LEFT', 'LEFT'],
   })
 
-  useInterval(async () => {
-    if (playing) setState(cycle(state, flow))
-  }, 300)
+  useInterval(
+    async () => {
+      if (playing) setState(cycle(state, flow))
+    },
+    fastMode ? 6 : 300
+  )
 
   return (
     <div style={{padding: '5px 0'}}>
@@ -298,6 +302,16 @@ const DiffusionDemo = () => {
             <option value="BIDIRECTIONAL">Bidirectional</option>
             <option value="RANDOM">Random</option>
           </select>
+        </label>
+        <label>
+          Fast Mode
+          <input
+            type="checkbox"
+            onChange={(e) => {
+              setFastMode(e.target.checked)
+            }}
+            defaultChecked={fastMode}
+          />
         </label>
         <span className="break" />
         <label>

@@ -143,6 +143,8 @@ export default class Sim {
       's01', 's23', 's01Prev', 's23Prev', 's01Given', 's23Given', 'a0123', 'a4567',
       's45', 's67', 's45Prev', 's67Prev', 's45Given', 's67Given',
     ])
+    sim.read('s01')
+    await sim.waitUntilIdle()
   }
   async display() {
     const sim = this.shaderBridge
